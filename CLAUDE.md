@@ -380,7 +380,7 @@ order by total desc;
 | Cadastros de agências e tarefas (Fase 1) | Sim: lista, criação, edição e exclusão; checagem de dono na Server Action |
 | Painel com risco (Fase 2) | Sim: contadores, lista do dia agrupada, atualização a cada 60 s, Motion |
 | Tela de campo (Fase 3) | Sim: status em um toque, Desfazer, ocorrências; gestor vê ocorrências na tarefa e no painel |
-| Cenário simulado de dados (seed) | Não |
+| Cenário simulado de dados (seed) | Script `npm run seed:demo` escrito (lint/typecheck ok); **ainda não executado** contra o Supabase |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
 
@@ -393,6 +393,9 @@ order by total desc;
 |---|---|
 | `npm run test:isolation` | Teste de RLS direto pela API: dois gestores e um campo; apaga os dados que cria (mantém as contas). Rodar após qualquer mudança em migration, RLS ou Server Action |
 | `npm run scenario:risk` | Recria, para `TEST_MANAGER_UI`, 8 tarefas `TESTE-*` (uma por situação de risco, prazos relativos ao horário atual) e confere a view. `-- --clean` só remove |
+| `npm run seed:demo` | Cenário da apresentação: cria (uma vez) Ana Ribeiro (gestora), Bruno Santos e Carla Mendes (campo), `@expedito.test`, senha `DEMO_PASSWORD`; apaga e recria só os dados da Ana (5 agências fictícias de Santos, 13 tarefas, 2 ocorrências) e confere a view. Rodar entre 07h e 19h, pouco antes da demo |
+
+Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck`: `PageProps`/`LayoutProps` são gerados pelo Next.
 
 ### 5.2 Decisões tomadas
 
@@ -408,8 +411,8 @@ order by total desc;
 
 ### 5.3 Pendências para a Fase 4 (perguntar ao usuário antes de começar)
 
-1. **Contas da demo:** criar contas apresentáveis (ex.: "Ana – Coordenação de Expedição" e dois usuários de campo)? Apagar as contas `@expedito.test` e os dados `TESTE-*`? (Apagar exige confirmação explícita.)
-2. **Frescor do cenário:** o risco depende do relógio, então o cenário precisa ser recriado pouco antes da apresentação de 09/10. Proposta: script `npm run seed:demo` relativo ao horário em que rodar.
+1. **Contas da demo (decidido em 07/10):** contas novas apresentáveis (Ana, Bruno, Carla) e agências fictícias. Contas `@expedito.test` de teste e dados `TESTE-*` **mantidos** por enquanto (apagar exige confirmação explícita).
+2. **Frescor do cenário:** resolvido com `npm run seed:demo` (relativo ao horário em que roda). Recriar pouco antes da apresentação de 09/10.
 3. Antes da apresentação: verificar se o projeto Supabase não foi pausado por inatividade (plano gratuito).
 
 ---

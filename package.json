@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test:isolation": "node scripts/isolation-test.mjs",
     "scenario:risk": "node scripts/risk-scenario.mjs",
+    "seed:demo": "node scripts/seed-demo.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
