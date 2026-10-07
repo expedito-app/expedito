@@ -71,6 +71,7 @@
 expedito/
 ├── supabase/
 │   └── migrations/              # SQL versionado (única fonte de verdade do schema)
+├── scripts/                     # Testes de API e cenários (ver seção 5.1)
 ├── src/
 │   ├── app/
 │   │   ├── (auth)/login/        # Página de login
@@ -381,9 +382,41 @@ order by total desc;
 | Tela de campo (Fase 3) | Sim: status em um toque, Desfazer, ocorrências; gestor vê ocorrências na tarefa e no painel |
 | Cenário simulado de dados (seed) | Não |
 
+### 5.1 Como rodar e testar (em qualquer máquina)
+
+1. `git clone https://github.com/expedito-app/expedito.git` e `npm install`.
+2. Criar `.env.local` a partir de `.env.example` (chaves em Supabase → Project Settings → API, ou Vercel → Settings → Environment Variables). Nunca versionar.
+3. Para os scripts de teste, criar `.env.test.local` a partir de `.env.test.example`.
+4. `npm run dev` para desenvolver; `npm run typecheck`, `npm run lint` e `npm run build` antes de cada commit.
+
+| Comando | O que faz |
+|---|---|
+| `npm run test:isolation` | Teste de RLS direto pela API: dois gestores e um campo; apaga os dados que cria (mantém as contas). Rodar após qualquer mudança em migration, RLS ou Server Action |
+| `npm run scenario:risk` | Recria, para `TEST_MANAGER_UI`, 8 tarefas `TESTE-*` (uma por situação de risco, prazos relativos ao horário atual) e confere a view. `-- --clean` só remove |
+
+### 5.2 Decisões tomadas
+
+- **`proxy.ts`** em vez de `middleware.ts` (renomeado no Next 16).
+- **`cacheComponents` ligado:** dados de sessão sempre dentro de `<Suspense>`; `lib/supabase/server.ts` chama `connection()` (o supabase-js usa `Date.now()`). Datas exibidas em Client Components chegam já formatadas do servidor (evita divergência de hidratação).
+- **Migration `20261007000100_tasks_same_owner.sql` NÃO aplicada** por decisão do usuário. A brecha (gestor criar tarefa com agência/campo de outro gestor pela API) é barrada só na Server Action (`actions/tasks.ts`, `checkOwnership`). O `test:isolation` mostra a brecha como `INFO`. Aplicar só se o usuário pedir.
+- **`types/database.ts` escrito à mão** (sem login no Supabase CLI). Trocar por `npx supabase gen types typescript --project-id <id>` quando houver acesso; ao mudar o schema, atualizar à mão.
+- **Dependências além da stack base:** `server-only` (impede `admin.ts` no navegador) e `motion` 14 (aprovado na Fase 2).
+- **Painel:** atualização automática a cada 60 s (pausa com a aba oculta); agrupamento "Precisa de atenção" (atrasadas e em risco) e depois por status.
+- **Gestor pode excluir tarefas** (com confirmação); agência com tarefas não pode ser excluída (FK).
+- **Registrar ocorrência muda a tarefa para "Com problema"** automaticamente; o campo usa "Retomar" para voltar a "Em andamento".
+- **Status (sem risco) usa estilo neutro**; cores de estado só para risco.
+
+### 5.3 Pendências para a Fase 4 (perguntar ao usuário antes de começar)
+
+1. **Contas da demo:** criar contas apresentáveis (ex.: "Ana – Coordenação de Expedição" e dois usuários de campo)? Apagar as contas `@expedito.test` e os dados `TESTE-*`? (Apagar exige confirmação explícita.)
+2. **Frescor do cenário:** o risco depende do relógio, então o cenário precisa ser recriado pouco antes da apresentação de 09/10. Proposta: script `npm run seed:demo` relativo ao horário em que rodar.
+3. Antes da apresentação: verificar se o projeto Supabase não foi pausado por inatividade (plano gratuito).
+
 ---
 
 ## 6. Objetivo Imediato
+
+> **Andamento:** Fases 0 a 3 concluídas (critérios abaixo atendidos em 07/10/2026). **Próxima: Fase 4 (seed do cenário simulado)**, ver pendências na seção 5.3. O texto abaixo é o plano original da Fase 0, mantido como referência.
 
 **Fase 0: fundação publicada, com login funcionando.** Tudo o mais depende disto.
 
@@ -397,13 +430,13 @@ order by total desc;
 7. Publicar na Vercel com as variáveis de ambiente configuradas.
 
 **Critérios de aceite**
-- [ ] A URL publicada abre a tela de login.
-- [ ] Um gestor se cadastra, entra e cai em `/painel`.
-- [ ] O gestor cria um usuário de campo, que entra e cai em `/hoje`.
-- [ ] **Teste de isolamento:** com dois gestores, um não consegue ver agências ou tarefas do outro (verificar também direto pela API).
-- [ ] Usuário de campo não acessa rotas do gestor.
-- [ ] `SUPABASE_SERVICE_ROLE_KEY` não aparece em nenhum bundle do cliente.
-- [ ] `tsc --noEmit` e o lint passam sem erros.
+- [x] A URL publicada abre a tela de login.
+- [x] Um gestor se cadastra, entra e cai em `/painel`.
+- [x] O gestor cria um usuário de campo, que entra e cai em `/hoje`.
+- [x] **Teste de isolamento:** com dois gestores, um não consegue ver agências ou tarefas do outro (verificar também direto pela API).
+- [x] Usuário de campo não acessa rotas do gestor.
+- [x] `SUPABASE_SERVICE_ROLE_KEY` não aparece em nenhum bundle do cliente.
+- [x] `tsc --noEmit` e o lint passam sem erros.
 
 **Próximas fases (não iniciar sem pedido):** (1) cadastros de agências e tarefas; (2) painel com risco; (3) tela de campo com status e ocorrências; (4) seed do cenário simulado; (5) itens opcionais.
 
