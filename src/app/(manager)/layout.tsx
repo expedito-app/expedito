@@ -7,6 +7,8 @@ import { PageFallback } from "@/components/ui/page-fallback";
 
 const nav = [
   { href: "/painel", label: "Painel" },
+  { href: "/tarefas", label: "Tarefas" },
+  { href: "/agencias", label: "Agências" },
   { href: "/equipe", label: "Equipe" },
 ] as const;
 
