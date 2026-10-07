@@ -94,3 +94,38 @@ export function fromDateTimeLocal(value: string): string {
     Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - asUtc;
   return new Date(asUtc - offset).toISOString();
 }
+
+/** Início e fim (exclusivo) do dia corrente em São Paulo, em ISO UTC. */
+export function saoPauloDayRange(now: Date): { start: string; end: string } {
+  const today = toDateTimeLocal(now.toISOString()).slice(0, 10);
+  const [year, month, day] = today.split("-").map(Number);
+  const next = new Date(Date.UTC(year, month - 1, day + 1));
+  const tomorrow = `${next.getUTCFullYear()}-${pad(next.getUTCMonth() + 1)}-${pad(next.getUTCDate())}`;
+  return {
+    start: fromDateTimeLocal(`${today}T00:00`),
+    end: fromDateTimeLocal(`${tomorrow}T00:00`),
+  };
+}
+
+const longDateFormat = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: TIME_ZONE,
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
+
+const timeFormat = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/** "quarta-feira, 7 de outubro" */
+export function formatLongDate(date: Date): string {
+  return longDateFormat.format(date);
+}
+
+/** "14:30" no fuso de São Paulo. */
+export function formatClock(iso: string): string {
+  return timeFormat.format(new Date(iso));
+}
