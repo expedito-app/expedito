@@ -373,9 +373,9 @@ order by total desc;
 | Repositório no GitHub | Sim: github.com/expedito-app/expedito |
 | Projeto Next.js inicializado | Sim (Next 16.4, `cacheComponents` ligado, `proxy.ts`) |
 | Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
-| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, não aplicada |
+| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário |
 | Login com perfis | Sim: login, cadastro de gestor, logout, redirecionamento e criação de campo (testado local) |
-| Deploy na Vercel | Não |
+| Deploy na Vercel | Sim: https://expedito-two.vercel.app |
 | Cadastros, painel e tela de campo | Não |
 | Cenário simulado de dados (seed) | Não |
 
