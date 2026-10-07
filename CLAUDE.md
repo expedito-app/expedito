@@ -378,7 +378,7 @@ order by total desc;
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
 | Cadastros de agências e tarefas (Fase 1) | Sim: lista, criação, edição e exclusão; checagem de dono na Server Action |
 | Painel com risco (Fase 2) | Sim: contadores, lista do dia agrupada, atualização a cada 60 s, Motion |
-| Tela de campo (Fase 3) | Não |
+| Tela de campo (Fase 3) | Sim: status em um toque, Desfazer, ocorrências; gestor vê ocorrências na tarefa e no painel |
 | Cenário simulado de dados (seed) | Não |
 
 ---

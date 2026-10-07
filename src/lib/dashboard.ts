@@ -16,6 +16,7 @@ export type DashboardTask = {
   urgency: Enums<"task_urgency">;
   status: Enums<"task_status">;
   riskLevel: RiskLevel;
+  occurrenceCount: number;
 };
 
 export type DashboardData = {
@@ -62,6 +63,15 @@ export async function loadDashboard(): Promise<DashboardData> {
 
   if (tasksResult.error) throw tasksResult.error;
 
+  const taskIds = tasksResult.data.map((t) => t.id);
+  const { data: occurrences } = taskIds.length
+    ? await supabase.from("task_occurrences").select("task_id").in("task_id", taskIds)
+    : { data: [] };
+  const occurrenceCount = new Map<string, number>();
+  for (const o of occurrences ?? []) {
+    occurrenceCount.set(o.task_id, (occurrenceCount.get(o.task_id) ?? 0) + 1);
+  }
+
   const memberName = new Map(
     (members.data ?? []).map((m) => [m.id, m.full_name]),
   );
@@ -81,6 +91,7 @@ export async function loadDashboard(): Promise<DashboardData> {
         urgency: t.urgency,
         status: t.status,
         riskLevel: toRiskLevel(t.risk_level),
+        occurrenceCount: occurrenceCount.get(t.id) ?? 0,
       }),
     )
     // Mais críticas primeiro, depois por prazo (a ordem do banco é estável).

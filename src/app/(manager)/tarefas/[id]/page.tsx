@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { deleteTask, updateTask } from "@/actions/tasks";
 import { TaskForm } from "@/components/features/task-form";
+import { TaskOccurrences } from "@/components/features/task-occurrences";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { PageFallback } from "@/components/ui/page-fallback";
 import { PageHeader } from "@/components/ui/page-header";
@@ -49,6 +50,7 @@ async function EditTask({ params }: { params: Promise<{ id: string }> }) {
           submitLabel="Salvar alterações"
         />
       </div>
+      <TaskOccurrences taskId={task.id} />
       <section
         aria-labelledby="excluir-tarefa"
         className="mt-16 max-w-xl border-t border-line pt-8"

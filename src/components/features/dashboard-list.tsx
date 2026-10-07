@@ -66,6 +66,13 @@ function TaskRow({ task }: { task: DashboardTask }) {
           {task.agencyName}
           {task.agencyClosesLabel && ` · ${task.agencyClosesLabel}`}
         </p>
+        {task.occurrenceCount > 0 && (
+          <p className="mt-1 text-xs font-medium text-ink">
+            {task.occurrenceCount === 1
+              ? "1 ocorrência registrada"
+              : `${task.occurrenceCount} ocorrências registradas`}
+          </p>
+        )}
       </div>
       <p className="order-last col-span-2 text-sm md:order-none md:col-span-1">
         {task.assigneeName ?? <span className="text-muted">Sem responsável</span>}
