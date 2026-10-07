@@ -68,10 +68,10 @@ async function ensureUser({ email, name }, managerId = null) {
 }
 
 const now = new Date();
-const { hh: nowHour } = spParts(now);
-if (nowHour < 7 || nowHour >= 19) {
+const { hh: nowHour, mm: nowMin } = spParts(now);
+if (nowHour < 7 || nowHour >= 21) {
   console.warn(
-    `Atenção: agora são ${spTime(now)} em SP. Fora de 07h–19h parte dos prazos cai em outro dia\n` +
+    `Atenção: agora são ${spTime(now)} em SP. Fora de 07h–21h parte dos prazos cai em outro dia\n` +
       "e o cenário não fica como o esperado. Rode o seed pouco antes da apresentação.\n",
   );
 }
@@ -88,6 +88,10 @@ for (const table of ["tasks", "agencies"]) {
 }
 
 const h = (n) => new Date(now.getTime() + n * 3_600_000).toISOString();
+// Prazos "de hoje" nunca passam de 23:50 em SP, para a demo noturna
+// (19:30–21:30) continuar com as tarefas no painel do dia.
+const endOfDayMs = now.getTime() + (24 * 60 - (nowHour * 60 + nowMin) - 10) * 60_000;
+const today = (n) => new Date(Math.min(now.getTime() + n * 3_600_000, endOfDayMs)).toISOString();
 // Agências "normais" fecham às 17h, ou mais tarde se a demo for no fim da tarde,
 // para não caírem na regra "fecha em 1 hora" sem querer.
 const normalClose = `${pad(Math.min(Math.max(17, nowHour + 4), 23))}:00`;
@@ -168,7 +172,7 @@ const { data: tasks, error: tErr } = await m
       document_ref: r.ref,
       description: r.desc,
       urgency: r.urgency,
-      due_at: h(r.due),
+      due_at: r.due > 0 && r.due < 24 ? today(r.due) : h(r.due),
       status: r.status,
       completed_at: r.status === "done" ? h(r.done) : null,
     })),

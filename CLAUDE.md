@@ -380,7 +380,7 @@ order by total desc;
 | Cadastros de agências e tarefas (Fase 1) | Sim: lista, criação, edição e exclusão; checagem de dono na Server Action |
 | Painel com risco (Fase 2) | Sim: contadores, lista do dia agrupada, atualização a cada 60 s, Motion |
 | Tela de campo (Fase 3) | Sim: status em um toque, Desfazer, ocorrências; gestor vê ocorrências na tarefa e no painel |
-| Cenário simulado de dados (seed) | Script `npm run seed:demo` escrito (lint/typecheck ok); **ainda não executado** contra o Supabase |
+| Cenário simulado de dados (Fase 4) | Sim: `npm run seed:demo`, executado em 07/10 às 19:33 (13/13 PASS); contas da demo criadas em produção |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
 
@@ -393,7 +393,7 @@ order by total desc;
 |---|---|
 | `npm run test:isolation` | Teste de RLS direto pela API: dois gestores e um campo; apaga os dados que cria (mantém as contas). Rodar após qualquer mudança em migration, RLS ou Server Action |
 | `npm run scenario:risk` | Recria, para `TEST_MANAGER_UI`, 8 tarefas `TESTE-*` (uma por situação de risco, prazos relativos ao horário atual) e confere a view. `-- --clean` só remove |
-| `npm run seed:demo` | Cenário da apresentação: cria (uma vez) Ana Ribeiro (gestora), Bruno Santos e Carla Mendes (campo), `@expedito.test`, senha `DEMO_PASSWORD`; apaga e recria só os dados da Ana (5 agências fictícias de Santos, 13 tarefas, 2 ocorrências) e confere a view. Rodar entre 07h e 19h, pouco antes da demo |
+| `npm run seed:demo` | Cenário da apresentação: cria (uma vez) Ana Ribeiro (gestora), Bruno Santos e Carla Mendes (campo), `@expedito.test`, senha `DEMO_PASSWORD`; apaga e recria só os dados da Ana (5 agências fictícias de Santos, 13 tarefas, 2 ocorrências) e confere a view. Prazos de hoje limitados a 23:50 (SP). Funciona se rodado entre 07h e 21h; para a apresentação (19:30–21:30), rodar por volta de 19:15 |
 
 Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck`: `PageProps`/`LayoutProps` são gerados pelo Next.
 
@@ -412,14 +412,14 @@ Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck
 ### 5.3 Pendências para a Fase 4 (perguntar ao usuário antes de começar)
 
 1. **Contas da demo (decidido em 07/10):** contas novas apresentáveis (Ana, Bruno, Carla) e agências fictícias. Contas `@expedito.test` de teste e dados `TESTE-*` **mantidos** por enquanto (apagar exige confirmação explícita).
-2. **Frescor do cenário:** resolvido com `npm run seed:demo` (relativo ao horário em que roda). Recriar pouco antes da apresentação de 09/10.
+2. **Frescor do cenário:** resolvido com `npm run seed:demo` (relativo ao horário em que roda). A apresentação de 09/10 é entre **19:30 e 21:30**: recriar o cenário por volta de 19:15. Durante a demo as tarefas mudam de risco sozinhas (em risco → atrasada; no prazo → em risco), o que mostra o painel atualizando a cada 60 s.
 3. Antes da apresentação: verificar se o projeto Supabase não foi pausado por inatividade (plano gratuito).
 
 ---
 
 ## 6. Objetivo Imediato
 
-> **Andamento:** Fases 0 a 3 concluídas (critérios abaixo atendidos em 07/10/2026). **Próxima: Fase 4 (seed do cenário simulado)**, ver pendências na seção 5.3. O texto abaixo é o plano original da Fase 0, mantido como referência.
+> **Andamento:** Fases 0 a 4 concluídas (Fase 4, seed do cenário simulado, em 07/10/2026). **Próxima: Fase 5 (itens opcionais), só com pedido do usuário**; antes da apresentação, ver checklist na seção 5.3. O texto abaixo é o plano original da Fase 0, mantido como referência.
 
 **Fase 0: fundação publicada, com login funcionando.** Tudo o mais depende disto.
 
