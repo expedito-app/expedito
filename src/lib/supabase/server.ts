@@ -1,11 +1,15 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import type { Database } from "@/types/database";
 import { getSupabasePublicEnv } from "./env";
 
 // Cliente de servidor com a sessão do usuário (cookies). Atua sob RLS.
 export async function createClient() {
+  // O supabase-js usa Date.now() ao ler a sessão; com cacheComponents isso
+  // precisa acontecer em tempo de requisição, nunca no prerender.
+  await connection();
   const { url, anonKey } = getSupabasePublicEnv();
   const cookieStore = await cookies();
 

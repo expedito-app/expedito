@@ -370,12 +370,12 @@ order by total desc;
 |---|---|
 | Escopo, perfis e regras de negócio definidos | Definido (este documento) |
 | Stack definida (Next.js + Supabase + Vercel) | Definida |
-| Repositório no GitHub | A confirmar |
-| Projeto Next.js inicializado | A confirmar |
-| Projeto Supabase criado e variáveis configuradas | A confirmar |
-| Migrations aplicadas | Não |
-| Login com perfis | Não |
-| Deploy na Vercel | A confirmar |
+| Repositório no GitHub | Sim: github.com/expedito-app/expedito |
+| Projeto Next.js inicializado | Sim (Next 16.4, `cacheComponents` ligado, `proxy.ts`) |
+| Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
+| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, não aplicada |
+| Login com perfis | Sim: login, cadastro de gestor, logout, redirecionamento e criação de campo (testado local) |
+| Deploy na Vercel | Não |
 | Cadastros, painel e tela de campo | Não |
 | Cenário simulado de dados (seed) | Não |
 

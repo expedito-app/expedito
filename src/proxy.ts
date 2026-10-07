@@ -3,8 +3,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
-// Renova a sessão do Supabase a cada requisição.
-// O redirecionamento por perfil entra no passo 6 da Fase 0.
+const PUBLIC_PATHS = ["/login", "/cadastro"];
+const MANAGER_PATHS = ["/painel", "/tarefas", "/agencias", "/equipe"];
+const FIELD_PATHS = ["/hoje"];
+const HOME = { manager: "/painel", field: "/hoje" } as const;
+
+function matches(pathname: string, paths: string[]) {
+  return paths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+// Renova a sessão do Supabase e envia cada perfil para a sua área.
+// É a camada de UX; a autorização definitiva é o RLS no banco.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const { url, anonKey } = getSupabasePublicEnv();
@@ -31,7 +40,41 @@ export async function proxy(request: NextRequest) {
 
   // Não colocar código entre a criação do cliente e getClaims():
   // é essa chamada que valida o token e dispara a renovação dos cookies.
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims.sub;
+
+  // Redireciona mantendo os cookies de sessão renovados acima.
+  const redirectTo = (pathname: string) => {
+    const redirect = NextResponse.redirect(new URL(pathname, request.url));
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  };
+
+  const { pathname } = request.nextUrl;
+
+  if (!userId) {
+    return matches(pathname, PUBLIC_PATHS) ? response : redirectTo("/login");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!profile) {
+    return matches(pathname, PUBLIC_PATHS) ? response : redirectTo("/login");
+  }
+
+  const home = HOME[profile.role];
+  if (pathname === "/" || matches(pathname, PUBLIC_PATHS)) {
+    return redirectTo(home);
+  }
+  if (profile.role === "field" && matches(pathname, MANAGER_PATHS)) {
+    return redirectTo(home);
+  }
+  if (profile.role === "manager" && matches(pathname, FIELD_PATHS)) {
+    return redirectTo(home);
+  }
 
   return response;
 }
