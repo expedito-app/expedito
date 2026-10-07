@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/*
+ * Tokens visuais (CLAUDE.md, seção 3.4): base neutra off-white/grafite,
+ * uma única cor de destaque e cores de estado reservadas ao risco.
+ */
+@theme {
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
+  --color-paper: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-ink: #1f2124;
+  --color-muted: #6b6e73;
+  --color-line: #e3e1db;
+
+  --color-accent: #1d4e89;
+  --color-accent-ink: #ffffff;
+
+  --color-risk-overdue: #a8322d;
+  --color-risk-overdue-soft: #f6e5e3;
+  --color-risk-at-risk: #9a6206;
+  --color-risk-at-risk-soft: #f8eedb;
+  --color-risk-ok: #3f6b4f;
+  --color-risk-ok-soft: #e7efe9;
+
+  /* Escala tipográfica */
+  --text-label: 0.6875rem;
+  --text-label--letter-spacing: 0.08em;
+  --text-label--line-height: 1rem;
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.01em;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
