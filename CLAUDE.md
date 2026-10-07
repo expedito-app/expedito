@@ -374,9 +374,10 @@ order by total desc;
 | Projeto Next.js inicializado | Sim (Next 16.4, `cacheComponents` ligado, `proxy.ts`) |
 | Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
 | Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário |
-| Login com perfis | Sim: login, cadastro de gestor, logout, redirecionamento e criação de campo (testado local) |
+| Login com perfis (Fase 0) | Sim, testado local e em produção |
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
-| Cadastros, painel e tela de campo | Não |
+| Cadastros de agências e tarefas (Fase 1) | Sim: lista, criação, edição e exclusão; checagem de dono na Server Action |
+| Painel com risco e tela de campo | Não |
 | Cenário simulado de dados (seed) | Não |
 
 ---
