@@ -1,19 +1,68 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Suspense } from "react";
+import { AutoRefresh } from "@/components/features/auto-refresh";
+import { DashboardCounters } from "@/components/features/dashboard-counters";
+import { DashboardList } from "@/components/features/dashboard-list";
+import { buttonBase, buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageFallback } from "@/components/ui/page-fallback";
+import { loadDashboard } from "@/lib/dashboard";
+import { formatClock, formatLongDate } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Painel · Expedito" };
 
-// Provisória (Fase 0). O painel com risco entra na Fase 2.
+const REFRESH_MS = 60_000;
+
+async function Dashboard() {
+  const { tasks, counters, generatedAt } = await loadDashboard();
+  return (
+    <>
+      <p className="mt-2 text-muted first-letter:uppercase">
+        {formatLongDate(new Date(generatedAt))}
+      </p>
+      <div className="mt-10">
+        <DashboardCounters counters={counters} />
+      </div>
+      <div className="mt-14">
+        {tasks.length ? (
+          <DashboardList tasks={tasks} />
+        ) : (
+          <EmptyState
+            message="Nenhuma tarefa para hoje e nada atrasado."
+            actionHref="/tarefas/nova"
+            actionLabel="Cadastrar tarefa"
+          />
+        )}
+      </div>
+      <p className="mt-10 text-sm text-muted" aria-live="polite">
+        Atualizado às {formatClock(generatedAt)} · atualiza sozinho a cada minuto
+      </p>
+      <AutoRefresh intervalMs={REFRESH_MS} />
+    </>
+  );
+}
+
 export default function PainelPage() {
   return (
     <>
-      <p className="text-label font-medium uppercase text-muted">Hoje</p>
-      <h1 className="mt-2 font-serif text-display font-semibold">
-        Painel do dia
-      </h1>
-      <p className="mt-4 max-w-lg text-muted">
-        Aqui vão aparecer as tarefas do dia, com destaque para as atrasadas e
-        as em risco.
-      </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-label font-medium uppercase text-muted">Hoje</p>
+          <h1 className="mt-2 font-serif text-display font-semibold">
+            Painel do dia
+          </h1>
+        </div>
+        <Link
+          href="/tarefas/nova"
+          className={`${buttonBase} ${buttonVariants.primary}`}
+        >
+          Nova tarefa
+        </Link>
+      </div>
+      <Suspense fallback={<PageFallback />}>
+        <Dashboard />
+      </Suspense>
     </>
   );
 }

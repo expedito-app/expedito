@@ -377,7 +377,8 @@ order by total desc;
 | Login com perfis (Fase 0) | Sim, testado local e em produção |
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
 | Cadastros de agências e tarefas (Fase 1) | Sim: lista, criação, edição e exclusão; checagem de dono na Server Action |
-| Painel com risco e tela de campo | Não |
+| Painel com risco (Fase 2) | Sim: contadores, lista do dia agrupada, atualização a cada 60 s, Motion |
+| Tela de campo (Fase 3) | Não |
 | Cenário simulado de dados (seed) | Não |
 
 ---
