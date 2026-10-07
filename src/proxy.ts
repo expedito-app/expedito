@@ -2,8 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import {
+  CHANGE_PASSWORD_PATH,
+  mustChangePassword,
+} from "@/lib/password-change";
 
-const PUBLIC_PATHS = ["/login", "/cadastro"];
+const PUBLIC_PATHS = ["/login"];
 const MANAGER_PATHS = ["/painel", "/tarefas", "/agencias", "/equipe"];
 const FIELD_PATHS = ["/hoje"];
 const HOME = { manager: "/painel", field: "/hoje" } as const;
@@ -65,8 +69,14 @@ export async function proxy(request: NextRequest) {
     return matches(pathname, PUBLIC_PATHS) ? response : redirectTo("/login");
   }
 
+  // Senha temporária: só a tela de troca fica acessível até a senha mudar.
+  const onChangePassword = matches(pathname, [CHANGE_PASSWORD_PATH]);
+  if (mustChangePassword(data?.claims.app_metadata)) {
+    return onChangePassword ? response : redirectTo(CHANGE_PASSWORD_PATH);
+  }
+
   const home = HOME[profile.role];
-  if (pathname === "/" || matches(pathname, PUBLIC_PATHS)) {
+  if (pathname === "/" || onChangePassword || matches(pathname, PUBLIC_PATHS)) {
     return redirectTo(home);
   }
   if (profile.role === "field" && matches(pathname, MANAGER_PATHS)) {

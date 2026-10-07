@@ -39,8 +39,9 @@ export function FieldUserForm() {
         errors={state.fieldErrors?.email}
       />
       <Field
-        label="Senha inicial"
+        label="Senha temporária"
         name="password"
+        hint="Mínimo de 8 caracteres. Será trocada no primeiro acesso."
         type="password"
         autoComplete="new-password"
         minLength={8}

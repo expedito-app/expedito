@@ -10,7 +10,8 @@
     "test:isolation": "node scripts/isolation-test.mjs",
     "scenario:risk": "node scripts/risk-scenario.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "manager:create": "node scripts/create-manager.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

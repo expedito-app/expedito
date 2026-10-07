@@ -50,8 +50,8 @@ export default function EquipePage() {
             Novo usuário de campo
           </h2>
           <p className="mt-2 text-sm text-muted">
-            Ele entra com este e-mail e senha e vê apenas as tarefas
-            atribuídas a ele.
+            Ele entra com este e-mail e a senha temporária, cria a própria
+            senha no primeiro acesso e vê apenas as tarefas atribuídas a ele.
           </p>
           <div className="mt-8">
             <FieldUserForm />
