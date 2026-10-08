@@ -153,6 +153,34 @@ export type Database = {
         };
         Relationships: [];
       };
+      task_signatures: {
+        Row: {
+          task_id: string;
+          manager_id: string;
+          author_id: string;
+          signer_name: string;
+          image: string;
+          signed_at: string;
+        };
+        // Gravação só por field_complete_task_with_signature (sem política de escrita).
+        Insert: {
+          task_id: string;
+          manager_id: string;
+          author_id: string;
+          signer_name: string;
+          image: string;
+          signed_at?: string;
+        };
+        Update: {
+          task_id?: string;
+          manager_id?: string;
+          author_id?: string;
+          signer_name?: string;
+          image?: string;
+          signed_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       tasks_with_risk: {
@@ -183,6 +211,10 @@ export type Database = {
       };
       field_update_task_status: {
         Args: { p_task_id: string; p_status: TaskStatus };
+        Returns: undefined;
+      };
+      field_complete_task_with_signature: {
+        Args: { p_task_id: string; p_signer_name: string; p_image: string };
         Returns: undefined;
       };
     };
