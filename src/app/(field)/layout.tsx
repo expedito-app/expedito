@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AlertCenter } from "@/components/features/alert-center";
 import { CurrentUserName } from "@/components/features/current-user-name";
 import { RoleGate } from "@/components/features/role-gate";
 import { SignOutButton } from "@/components/features/sign-out-button";
@@ -24,6 +25,7 @@ export default function FieldLayout({ children }: LayoutProps<"/">) {
           <RoleGate role="field">{children}</RoleGate>
         </Suspense>
       </main>
+      <AlertCenter placement="top" />
     </div>
   );
 }

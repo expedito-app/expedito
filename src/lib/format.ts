@@ -129,3 +129,17 @@ export function formatLongDate(date: Date): string {
 export function formatClock(iso: string): string {
   return timeFormat.format(new Date(iso));
 }
+
+const fullDateTimeFormat = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: TIME_ZONE,
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/** "07/10/2026, 14:30" no fuso de São Paulo (planilhas exportadas). */
+export function formatFullDateTime(iso: string): string {
+  return fullDateTimeFormat.format(new Date(iso));
+}

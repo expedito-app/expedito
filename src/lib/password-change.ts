@@ -10,3 +10,14 @@ export function mustChangePassword(
 ): boolean {
   return appMetadata?.[MUST_CHANGE_PASSWORD_KEY] === true;
 }
+
+// Papel do usuário também em app_metadata (gravado na criação da conta pelo
+// servidor), para o proxy não consultar o banco a cada requisição.
+export const ROLE_KEY = "expedito_role";
+
+export function roleFromClaims(
+  appMetadata: UserAppMetadata | undefined,
+): "manager" | "field" | null {
+  const value = appMetadata?.[ROLE_KEY];
+  return value === "manager" || value === "field" ? value : null;
+}
