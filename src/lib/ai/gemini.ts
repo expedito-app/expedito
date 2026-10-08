@@ -2,7 +2,7 @@ import "server-only";
 import { GoogleGenAI } from "@google/genai";
 
 // Modelo rápido e barato; trocável por GEMINI_MODEL sem mexer no código.
-export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 
 let client: GoogleGenAI | null = null;
 

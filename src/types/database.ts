@@ -14,6 +14,7 @@ type UserRole = "manager" | "field";
 type TaskUrgency = "low" | "medium" | "high";
 type TaskStatus = "pending" | "in_progress" | "done" | "problem";
 type OccurrenceType = "agency_closed" | "missing_document" | "other";
+type TransportMode = "transit" | "motorcycle" | "car";
 
 export type Database = {
   public: {
@@ -25,6 +26,9 @@ export type Database = {
           full_name: string;
           manager_id: string | null;
           created_at: string;
+          transport_mode: TransportMode | null;
+          base_address: string | null;
+          route_manual: boolean;
         };
         Insert: {
           id: string;
@@ -32,6 +36,9 @@ export type Database = {
           full_name: string;
           manager_id?: string | null;
           created_at?: string;
+          transport_mode?: TransportMode | null;
+          base_address?: string | null;
+          route_manual?: boolean;
         };
         Update: {
           id?: string;
@@ -39,6 +46,9 @@ export type Database = {
           full_name?: string;
           manager_id?: string | null;
           created_at?: string;
+          transport_mode?: TransportMode | null;
+          base_address?: string | null;
+          route_manual?: boolean;
         };
         Relationships: [];
       };
@@ -92,6 +102,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
           completed_at: string | null;
+          route_position: number | null;
+          route_reason: string | null;
         };
         Insert: {
           id?: string;
@@ -106,6 +118,8 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           completed_at?: string | null;
+          route_position?: number | null;
+          route_reason?: string | null;
         };
         Update: {
           id?: string;
@@ -120,6 +134,8 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           completed_at?: string | null;
+          route_position?: number | null;
+          route_reason?: string | null;
         };
         Relationships: [];
       };
@@ -223,6 +239,7 @@ export type Database = {
       task_urgency: TaskUrgency;
       task_status: TaskStatus;
       occurrence_type: OccurrenceType;
+      transport_mode: TransportMode;
     };
     CompositeTypes: Record<string, never>;
   };

@@ -39,3 +39,5 @@ export const taskSchema = z.object({
 export type TaskInput = z.infer<typeof taskSchema>;
 
 export const taskStatusFilter = z.enum(TASK_STATUSES).optional().catch(undefined);
+
+export const taskRiskFilter = z.enum(["overdue", "at_risk"]).optional().catch(undefined);
