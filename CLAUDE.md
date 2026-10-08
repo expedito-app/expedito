@@ -377,7 +377,7 @@ order by total desc;
 | Repositório no GitHub | Sim: github.com/expedito-app/expedito |
 | Projeto Next.js inicializado | Sim (Next 16.4, `cacheComponents` ligado, `proxy.ts`) |
 | Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
-| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` escrita em 07/10, **aguardando aprovação** |
+| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` aplicada em 07/10 |
 | Login com perfis (Fase 0) | Sim, testado local e em produção |
 | Sem cadastro público + senha temporária (Fase 6, item 1) | Implementado no PR do branch `claude/project-thread-1m9nwa`; falta desligar o cadastro no Supabase e testar |
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
@@ -385,7 +385,7 @@ order by total desc;
 | Painel com risco (Fase 2) | Sim: contadores, lista do dia agrupada, atualização a cada 60 s, Motion |
 | Tela de campo (Fase 3) | Sim: status em um toque, Desfazer, ocorrências; gestor vê ocorrências na tarefa e no painel |
 | Chat de IA que cria tarefa (escopo ampliado) | Código escrito em 07/10 (botão "Assistente" no cabeçalho do gestor); falta `npm install @google/genai`, `GEMINI_API_KEY` e teste |
-| Assinatura na conclusão (escopo ampliado) | Código escrito em 07/10; depende da migration `20261008000000_task_signatures.sql` |
+| Assinatura na conclusão (escopo ampliado) | Sim (branch `claude/assinatura`): migration aplicada, `test:isolation` 100% PASS e testado de ponta a ponta no local |
 | Cenário simulado de dados (Fase 4) | Sim: `npm run seed:demo`, executado em 07/10 às 19:33 (13/13 PASS); contas da demo criadas em produção |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
