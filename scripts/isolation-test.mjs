@@ -160,6 +160,30 @@ try {
   const { data: risk } = await F.c.from("tasks_with_risk").select("risk_level").eq("id", task.id).single();
   check("view de risco responde para o campo", !!risk?.risk_level, risk?.risk_level);
 
+  console.log("\n# Assinatura na conclusão (migration 20261008000000)");
+  const PNG = "data:image/png;base64,iVBORw0KGgo=";
+  const { error: fDone } = await F.c.rpc("field_update_task_status", { p_task_id: task.id, p_status: "done" });
+  check("campo não conclui sem assinatura", !!fDone);
+  const { error: fSigDirect } = await F.c.from("task_signatures").insert({
+    task_id: task.id, manager_id: A.id, author_id: F.id, signer_name: "x", image: PNG,
+  });
+  check("campo não grava assinatura direto na tabela", !!fSigDirect);
+  const { error: bSign } = await B.c.rpc("field_complete_task_with_signature", {
+    p_task_id: task.id, p_signer_name: "Intruso", p_image: PNG,
+  });
+  check("gestor B não conclui tarefa de A com assinatura", !!bSign);
+  const { error: fSign } = await F.c.rpc("field_complete_task_with_signature", {
+    p_task_id: task.id, p_signer_name: "Atendente Teste", p_image: PNG,
+  });
+  check("campo conclui com assinatura", !fSign, fSign?.message);
+  const { data: aSig } = await A.c.from("task_signatures").select("signer_name").eq("task_id", task.id);
+  check("gestor A vê a assinatura", aSig?.length === 1 && aSig[0].signer_name === "Atendente Teste");
+  const { data: bSig } = await B.c.from("task_signatures").select("task_id").eq("task_id", task.id);
+  check("gestor B não vê a assinatura de A", bSig?.length === 0);
+  const { error: fReopen } = await F.c.rpc("field_update_task_status", { p_task_id: task.id, p_status: "in_progress" });
+  const { data: afterReopen } = await admin.from("task_signatures").select("task_id").eq("task_id", task.id);
+  check("reabrir apaga a assinatura", !fReopen && afterReopen?.length === 0, fReopen?.message);
+
   console.log("\n# Outros perfis contra a tarefa de A");
   const { error: bOcc } = await B.c.from("task_occurrences").insert({
     task_id: task.id, manager_id: B.id, author_id: B.id, type: "other", note: "x",

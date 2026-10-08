@@ -3,7 +3,12 @@
 import { refresh } from "next/cache";
 import { getCurrentProfile, type Profile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { occurrenceSchema, statusChangeSchema } from "@/lib/validation/field";
+import { z } from "zod";
+import {
+  completionSchema,
+  occurrenceSchema,
+  statusChangeSchema,
+} from "@/lib/validation/field";
 import {
   fromZodError,
   readForm,
@@ -31,6 +36,9 @@ export async function updateTaskStatus(
 
   const parsed = statusChangeSchema.safeParse({ taskId, status });
   if (!parsed.success) return { error: "Mudança de status inválida." };
+  if (parsed.data.status === "done") {
+    return { error: "Para concluir, colete a assinatura." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("field_update_task_status", {
@@ -41,6 +49,31 @@ export async function updateTaskStatus(
 
   refresh();
   return {};
+}
+
+// Conclui com assinatura: a função do banco grava as duas coisas juntas.
+export async function completeTaskWithSignature(input: unknown): Promise<FormState> {
+  if (!(await requireField())) return NOT_FIELD;
+
+  const parsed = completionSchema.safeParse(input);
+  if (!parsed.success) {
+    const { fieldErrors } = z.flattenError(parsed.error);
+    return {
+      error: fieldErrors.image?.[0] ?? "Revise os campos destacados.",
+      fieldErrors,
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("field_complete_task_with_signature", {
+    p_task_id: parsed.data.taskId,
+    p_signer_name: parsed.data.signerName,
+    p_image: parsed.data.image,
+  });
+  if (error) return { error: "Não foi possível concluir a tarefa." };
+
+  refresh();
+  return { success: "Tarefa concluída." };
 }
 
 // Registra a ocorrência e coloca a tarefa em "Com problema".

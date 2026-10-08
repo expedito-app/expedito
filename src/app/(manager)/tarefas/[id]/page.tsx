@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { deleteTask, updateTask } from "@/actions/tasks";
 import { TaskForm } from "@/components/features/task-form";
 import { TaskOccurrences } from "@/components/features/task-occurrences";
+import { TaskSignature } from "@/components/features/task-signature";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { PageFallback } from "@/components/ui/page-fallback";
 import { PageHeader } from "@/components/ui/page-header";
@@ -50,6 +51,7 @@ async function EditTask({ params }: { params: Promise<{ id: string }> }) {
           submitLabel="Salvar alterações"
         />
       </div>
+      {task.status === "done" && <TaskSignature taskId={task.id} />}
       <TaskOccurrences taskId={task.id} />
       <section
         aria-labelledby="excluir-tarefa"
@@ -62,7 +64,7 @@ async function EditTask({ params }: { params: Promise<{ id: string }> }) {
           Excluir
         </h3>
         <p className="mt-2 mb-4 text-sm text-muted">
-          A tarefa e as ocorrências registradas nela serão apagadas.
+          A tarefa, as ocorrências e a assinatura registradas nela serão apagadas.
         </p>
         <DeleteButton
           action={deleteTask.bind(null, task.id)}
