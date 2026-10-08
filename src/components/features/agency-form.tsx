@@ -14,6 +14,8 @@ export type AgencyFormValues = {
   closesAt: string;
   requirements: string;
   notes: string;
+  latitude: string;
+  longitude: string;
 };
 
 export const EMPTY_AGENCY: AgencyFormValues = {
@@ -23,6 +25,8 @@ export const EMPTY_AGENCY: AgencyFormValues = {
   closesAt: "",
   requirements: "",
   notes: "",
+  latitude: "",
+  longitude: "",
 };
 
 type AgencyFormProps = {
@@ -52,6 +56,24 @@ export function AgencyForm({ action, initial, submitLabel }: AgencyFormProps) {
         defaultValue={v.address}
         errors={errors?.address}
       />
+      <div className="grid grid-cols-2 gap-4">
+        <Field
+          label="Latitude"
+          name="latitude"
+          inputMode="decimal"
+          defaultValue={v.latitude}
+          errors={errors?.latitude}
+          hint="Em branco: localizamos pelo endereço."
+        />
+        <Field
+          label="Longitude"
+          name="longitude"
+          inputMode="decimal"
+          defaultValue={v.longitude}
+          errors={errors?.longitude}
+          hint="Usadas na roteirização."
+        />
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <Field
           label="Abre às"

@@ -3,8 +3,9 @@
 import { useActionState } from "react";
 import { createFieldUser } from "@/actions/team";
 import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
+import { Field, SelectField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
+import { TRANSPORT_LABEL, TRANSPORT_MODES } from "@/lib/transport";
 import type { FormState } from "@/lib/validation/form-state";
 
 const initialState: FormState = {};
@@ -48,6 +49,19 @@ export function FieldUserForm() {
         required
         errors={state.fieldErrors?.password}
       />
+      <SelectField
+        label="Meio de transporte"
+        name="transportMode"
+        defaultValue="transit"
+        hint="Usado para estimar o tempo entre as visitas na rota."
+        errors={state.fieldErrors?.transportMode}
+      >
+        {TRANSPORT_MODES.map((mode) => (
+          <option key={mode} value={mode}>
+            {TRANSPORT_LABEL[mode]}
+          </option>
+        ))}
+      </SelectField>
       <Button type="submit" disabled={pending} className="mt-2 self-start">
         {pending ? "Criando…" : "Adicionar à equipe"}
       </Button>

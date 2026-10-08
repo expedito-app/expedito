@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth";
+import { geocodeAddress } from "@/lib/geocode";
 import { createClient } from "@/lib/supabase/server";
 import { AGENCY_FIELDS, agencySchema } from "@/lib/validation/agency";
 import {
@@ -15,7 +16,9 @@ const NOT_MANAGER: FormState = {
   error: "Apenas gestores podem gerenciar agências.",
 };
 
-function toRow(data: ReturnType<typeof agencySchema.parse>) {
+type AgencyInput = ReturnType<typeof agencySchema.parse>;
+
+function toRow(data: AgencyInput) {
   return {
     name: data.name,
     address: data.address,
@@ -23,7 +26,16 @@ function toRow(data: ReturnType<typeof agencySchema.parse>) {
     closes_at: data.closesAt,
     requirements: data.requirements,
     notes: data.notes,
+    latitude: data.latitude,
+    longitude: data.longitude,
   };
+}
+
+/** Sem coordenadas digitadas: tenta localizar pelo endereço (para a roteirização). */
+async function withCoordinates(data: AgencyInput): Promise<AgencyInput> {
+  if (data.latitude !== null || !data.address) return data;
+  const found = await geocodeAddress(data.address);
+  return found ? { ...data, ...found } : data;
 }
 
 export async function createAgency(
@@ -40,7 +52,7 @@ export async function createAgency(
   const supabase = await createClient();
   const { error } = await supabase
     .from("agencies")
-    .insert({ ...toRow(parsed.data), manager_id: manager.id });
+    .insert({ ...toRow(await withCoordinates(parsed.data)), manager_id: manager.id });
   if (error) return { error: "Não foi possível salvar a agência.", values };
 
   redirect("/agencias");
@@ -61,9 +73,26 @@ export async function updateAgency(
 
   // O RLS garante que só a agência do próprio gestor é alterada.
   const supabase = await createClient();
+
+  // Endereço mudou e as coordenadas ficaram as antigas: localiza de novo.
+  let input = parsed.data;
+  const { data: current } = await supabase
+    .from("agencies")
+    .select("address, latitude, longitude")
+    .eq("id", id)
+    .maybeSingle();
+  if (
+    current &&
+    current.address !== input.address &&
+    current.latitude === input.latitude &&
+    current.longitude === input.longitude
+  ) {
+    input = { ...input, latitude: null, longitude: null };
+  }
+
   const { data, error } = await supabase
     .from("agencies")
-    .update(toRow(parsed.data))
+    .update(toRow(await withCoordinates(input)))
     .eq("id", id)
     .select("id");
   if (error || !data.length) {

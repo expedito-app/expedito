@@ -41,7 +41,9 @@
 
 **Escopo de gestão (pedido pelo usuário em 08/10/2026):** página Indicadores com período selecionável e análise de IA, exportação CSV (abre no Google Sheets/Excel), importação de tarefas por CSV, alertas em pop-up dentro do app (não é push), papel do usuário no token do proxy e CI no GitHub Actions.
 
-**Fora do escopo (não implementar):** recuperação de senha, login social, notificações push (fora do navegador), rotas com trânsito e mapas, rastreamento de localização, integrações externas além do Gemini, módulo financeiro, app nativo (React Native), multiempresa compartilhada, base de agências compartilhada.
+**Roteirização (pedido pelo usuário em 08/10/2026):** meio de transporte por usuário de campo, coordenadas das agências (localizadas pelo endereço no OpenStreetMap/Nominatim, única integração externa além do Gemini, ou digitadas), ordem sugerida das visitas (`/rotas` e `/hoje`), sugestão automática de responsável ao criar tarefa (formulário e assistente) e revisão das rotas com IA. Sem mapa desenhado e sem trânsito em tempo real.
+
+**Fora do escopo (não implementar):** recuperação de senha, login social, notificações push (fora do navegador), rotas com trânsito em tempo real e mapas desenhados, rastreamento de localização, integrações externas além do Gemini, módulo financeiro, app nativo (React Native), multiempresa compartilhada, base de agências compartilhada.
 
 ---
 
@@ -379,7 +381,7 @@ order by total desc;
 | Repositório no GitHub | Sim: github.com/expedito-app/expedito |
 | Projeto Next.js inicializado | Sim (Next 16.4, `cacheComponents` ligado, `proxy.ts`) |
 | Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
-| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` aplicada em 07/10 |
+| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` aplicada em 07/10; `20261009000000_roteirizacao.sql` (PR `claude/roteirizacao`) **aplicar antes de publicar esse PR** |
 | Login com perfis (Fase 0) | Sim, testado local e em produção |
 | Sem cadastro público + senha temporária (Fase 6, item 1) | Sim (na `main`); cadastro público desligado no Supabase (conferido pelo `test:isolation` em 08/10) |
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
@@ -389,6 +391,7 @@ order by total desc;
 | Chat de IA que cria tarefa (escopo ampliado) | Sim (na `main` desde 08/10, botão "Assistente" no cabeçalho do gestor): `GEMINI_API_KEY` e `GEMINI_MODEL=gemini-3.5-flash` no `.env.local` e na Vercel (Production); testado no local e em produção |
 | Assinatura na conclusão (escopo ampliado) | Sim (na `main` desde 08/10): migration aplicada, `test:isolation` 100% PASS e testado de ponta a ponta no local |
 | Melhorias de gestão (08/10, PR `claude/melhorias-gestao`) | `/indicadores` (KPIs, série, equipe, agências, mapa de calor, próximos 7 dias, custo de atraso, análise com Gemini), exportar CSV, `/tarefas/importar` (CSV), pop-ups de alerta (gestor e campo), risco e busca por BL em `/tarefas`, Gemini padrão 3.5, papel no token, CI, README em pt-BR, seed com 12 meses de histórico. **Sem migration** |
+| Roteirização (08/10, PR `claude/roteirizacao`, depende do PR de gestão) | Transporte na Equipe, coordenadas na Agência, `/rotas` (rota do dia por pessoa + revisão com IA), ordem sugerida no `/hoje`, sugestão de responsável no formulário e no assistente, assinatura apagada quando o gestor reabre. **Com migration** |
 | Cenário simulado de dados (Fase 4) | Sim: `npm run seed:demo`, executado em 07/10 às 19:33 (13/13 PASS); contas da demo criadas em produção |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
@@ -426,6 +429,10 @@ Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck
 - **Importação (`actions/import.ts`):** CSV até 900 KB/500 linhas, tudo ou nada; agência e responsável casados pelo nome (sem acento/maiúscula) nas listas do próprio gestor. `.xlsx` é recusado com instrução para salvar como CSV (sem dependência nova).
 - **Alertas (`actions/alerts.ts`, `alert-center.tsx`):** pop-ups dentro do app, consulta a cada 60 s com a aba visível; atrasada, vence em ≤ 30 min, em risco, sem responsável e ocorrência nova. Dispensados ficam no `localStorage` até o fim do dia; o id muda quando a situação piora. No campo aparecem no topo.
 - **Papel no token:** `app_metadata.expedito_role` gravado na criação (equipe, `manager:create`, seed). O `proxy.ts` usa a marca e só consulta `profiles` em contas antigas sem ela.
+- **Roteirização (`lib/routing.ts` puro, `lib/routes.ts` com as consultas):** distância em linha reta × 1,35 (ruas), velocidade e tempo extra por parada de cada transporte (`lib/transport.ts`: ônibus/a pé 14 km/h, moto 28, carro 22 com 10 min para estacionar), 15 min de atendimento. Prazo efetivo = menor entre o prazo e o fechamento da agência. Ordem gulosa: folga < 30 min vai primeiro; senão menor deslocamento com peso leve para a folga. Saída = agora (hoje) ou 08:00. Agência sem coordenada conta 2,5 km. Sugestão de responsável = menor (minutos a mais na rota + 60 por visita que passa a atrasar + 8 por tarefa já no dia); o formulário pré-seleciona enquanto o gestor não escolhe à mão.
+- **Geocodificação (`lib/geocode.ts`):** Nominatim, só no servidor, ao salvar agência sem coordenadas (ou com endereço novo e coordenadas antigas). Timeout de 4 s; se falhar, salva sem coordenadas.
+- **Transporte:** coluna `profiles.transport_mode`; o gestor altera pela Equipe com o cliente admin preso a `manager_id` do gestor logado (profiles não tem política de UPDATE).
+- **Reabrir pelo gestor:** `updateTask` chama `manager_clear_task_signature` quando o status sai de "Concluída"; a função só apaga assinatura de tarefa do próprio gestor que não está concluída.
 - **`/tarefas`:** sem filtro mostra abertas + concluídas da última semana (o histórico antigo fica no filtro "Concluída", na busca e em Indicadores); limite de 200 linhas.
 
 ### 5.3 Pendências para a Fase 4 (perguntar ao usuário antes de começar)

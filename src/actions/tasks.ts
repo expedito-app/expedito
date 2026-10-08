@@ -177,6 +177,15 @@ export async function updateTask(
     return { error: "Não foi possível salvar a tarefa.", values };
   }
 
+  // Reaberta pelo gestor: a assinatura da conclusão antiga deixa de valer
+  // (o campo já faz o mesmo ao desfazer). Só apaga se a tarefa não está concluída.
+  if (current.status === "done" && parsed.data.status !== "done") {
+    const { error: signatureError } = await supabase.rpc("manager_clear_task_signature", {
+      p_task_id: id,
+    });
+    if (signatureError) console.error("Assinatura não removida:", signatureError.message);
+  }
+
   redirect("/tarefas");
 }
 

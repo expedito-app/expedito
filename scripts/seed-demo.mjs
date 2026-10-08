@@ -16,8 +16,8 @@ const admin = createClient(URL, env.SUPABASE_SERVICE_ROLE_KEY, noSession);
 const anonClient = () => createClient(URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, noSession);
 
 const MANAGER = { email: "ana.ribeiro@expedito.test", name: "Ana Ribeiro" };
-const BRUNO = { email: "bruno.santos@expedito.test", name: "Bruno Santos" };
-const CARLA = { email: "carla.mendes@expedito.test", name: "Carla Mendes" };
+const BRUNO = { email: "bruno.santos@expedito.test", name: "Bruno Santos", transport: "motorcycle" };
+const CARLA = { email: "carla.mendes@expedito.test", name: "Carla Mendes", transport: "transit" };
 
 const spParts = (d) => {
   const [hh, mm] = new Intl.DateTimeFormat("en-CA", {
@@ -39,7 +39,7 @@ const spTime = (d) => {
 
 // Cria a conta (o trigger gera o perfil como gestor) ou reaproveita a existente,
 // e acerta o perfil. Para o campo, repete o que faz a Server Action da Equipe.
-async function ensureUser({ email, name }, managerId = null) {
+async function ensureUser({ email, name, transport = "transit" }, managerId = null) {
   const { data: list, error: listErr } = await admin.auth.admin.listUsers({ perPage: 1000 });
   if (listErr) throw listErr;
   let user = list.users.find((u) => u.email === email);
@@ -54,7 +54,7 @@ async function ensureUser({ email, name }, managerId = null) {
     user = data.user;
   }
   const profile = managerId
-    ? { role: "field", manager_id: managerId, full_name: name }
+    ? { role: "field", manager_id: managerId, full_name: name, transport_mode: transport }
     : { role: "manager", manager_id: null, full_name: name };
   const { error } = await admin.from("profiles").update(profile).eq("id", user.id);
   if (error) throw error;
@@ -108,6 +108,8 @@ const { data: agencies, error: aErr } = await m
     {
       name: "Atlântico Marítima",
       address: "Rua XV de Novembro, 95 – Centro, Santos/SP",
+      latitude: -23.9336,
+      longitude: -46.3279,
       opens_at: "08:00",
       closes_at: normalClose,
       requirements: "Procuração original e documento com foto.",
@@ -116,6 +118,8 @@ const { data: agencies, error: aErr } = await m
     {
       name: "Porto Sul Agenciamentos",
       address: "Av. Senador Feijó, 200 – Vila Mathias, Santos/SP",
+      latitude: -23.9445,
+      longitude: -46.3195,
       opens_at: "09:00",
       closes_at: normalClose,
       requirements: "BL só é liberado com carta de liberação assinada pelo cliente.",
@@ -124,6 +128,8 @@ const { data: agencies, error: aErr } = await m
     {
       name: "Maré Alta Shipping",
       address: "Rua Frei Gaspar, 22 – Centro, Santos/SP",
+      latitude: -23.9341,
+      longitude: -46.3262,
       opens_at: "08:00",
       closes_at: soonClose,
       requirements: "Comprovante de pagamento das taxas locais.",
@@ -132,6 +138,8 @@ const { data: agencies, error: aErr } = await m
     {
       name: "Costa Verde Navegação",
       address: "Av. Ana Costa, 433 – Gonzaga, Santos/SP",
+      latitude: -23.9631,
+      longitude: -46.3338,
       opens_at: "08:30",
       closes_at: normalClose,
       requirements: "Agendamento prévio por e-mail.",
@@ -140,6 +148,8 @@ const { data: agencies, error: aErr } = await m
     {
       name: "Baía Logística Marítima",
       address: "Rua do Comércio, 60 – Centro, Santos/SP",
+      latitude: -23.9318,
+      longitude: -46.3302,
       opens_at: "08:00",
       closes_at: normalClose,
       requirements: null,

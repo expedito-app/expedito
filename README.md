@@ -33,10 +33,14 @@ O Expedito é uma aplicação web com dois perfis.
 - **Planilhas**:
   - importação de tarefas por CSV (exportado do Excel ou do Google Sheets);
   - exportação do período em CSV.
-- Cadastros de agências (horário, endereço, exigências), tarefas e equipe. Lista de tarefas com busca por BL e selo de risco.
+- **Roteirização**:
+  - rota do dia de cada pessoa, considerando prazo, horário da agência, distância entre as visitas e meio de transporte (ônibus/a pé, moto ou carro);
+  - **revisão com IA**, que sugere trocas e agrupamentos;
+  - ao criar uma tarefa, o sistema **sugere o responsável** que já vai passar perto (o gestor pode trocar).
+- Cadastros de agências (horário, endereço localizado automaticamente, exigências), tarefas e equipe. Lista de tarefas com busca por BL e selo de risco.
 
 **Campo (celular)**
-- Lista do dia com status em um toque, ocorrências ("agência fechada", "faltou documento") e alertas do que está vencendo.
+- Lista do dia **na ordem sugerida da rota**, com chegada prevista, status em um toque, ocorrências ("agência fechada", "faltou documento") e alertas do que está vencendo.
 - **Conclusão com assinatura** de quem recebeu, desenhada na tela.
 
 ### Regra de risco
@@ -114,7 +118,7 @@ Num clone novo, rode `npx next typegen` antes do `typecheck`.
 ```
 supabase/migrations/   schema, RLS e funções (fonte da verdade)
 scripts/               seed da demo, cenários e teste de isolamento
-src/app/(manager)/     painel, indicadores, tarefas, agências, equipe
+src/app/(manager)/     painel, indicadores, tarefas, rotas, agências, equipe
 src/app/(field)/hoje   tela do campo (mobile)
 src/actions/           Server Actions (sempre com Zod)
 src/lib/               regras de risco, indicadores, datas, clientes Supabase e Gemini

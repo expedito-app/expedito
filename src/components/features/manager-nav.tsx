@@ -8,6 +8,7 @@ const items = [
   { href: "/painel", label: "Painel" },
   { href: "/indicadores", label: "Indicadores" },
   { href: "/tarefas", label: "Tarefas" },
+  { href: "/rotas", label: "Rotas" },
   { href: "/agencias", label: "Agências" },
   { href: "/equipe", label: "Equipe" },
 ] as const;
