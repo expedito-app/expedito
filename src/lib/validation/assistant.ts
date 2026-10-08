@@ -2,6 +2,8 @@ import { z } from "zod";
 import { TASK_URGENCIES } from "./task";
 
 export const MAX_MESSAGE_LENGTH = 1000;
+// O navegador envia só as últimas mensagens; o limite aqui é a defesa do servidor.
+export const MAX_HISTORY = 20;
 
 // Histórico enviado pelo navegador a cada pergunta (o servidor não guarda conversa).
 export const assistantHistorySchema = z
@@ -11,8 +13,8 @@ export const assistantHistorySchema = z
       text: z.string().trim().min(1).max(4000),
     }),
   )
-  .min(1)
-  .max(20)
+  .min(1, { error: "Mensagem vazia." })
+  .max(MAX_HISTORY, { error: "Conversa longa demais. Feche e abra o assistente." })
   .refine((h) => h[h.length - 1].role === "user", "A última mensagem deve ser do gestor.")
   .refine(
     (h) => h[h.length - 1].text.length <= MAX_MESSAGE_LENGTH,

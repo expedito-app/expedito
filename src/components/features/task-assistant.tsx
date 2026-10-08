@@ -7,7 +7,11 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { askAssistant, type AssistantReply } from "@/actions/assistant";
 import { createTaskFromDraft } from "@/actions/tasks";
 import { Button } from "@/components/ui/button";
-import { MAX_MESSAGE_LENGTH, type AssistantMessage } from "@/lib/validation/assistant";
+import {
+  MAX_HISTORY,
+  MAX_MESSAGE_LENGTH,
+  type AssistantMessage,
+} from "@/lib/validation/assistant";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -28,7 +32,14 @@ type Message =
 const EXAMPLE = "Retirar o BL MSCU1234567 na Maersk amanhã até 15h, urgente, Bruno";
 
 // O que o Gemini precisa saber de cada turno anterior (o servidor não guarda conversa).
+// Só as últimas MAX_HISTORY mensagens, começando por uma do gestor.
 function toHistory(messages: Message[]): AssistantMessage[] {
+  const recent = toTurns(messages).slice(-MAX_HISTORY);
+  const firstUser = recent.findIndex((m) => m.role === "user");
+  return firstUser === -1 ? recent : recent.slice(firstUser);
+}
+
+function toTurns(messages: Message[]): AssistantMessage[] {
   return messages.flatMap((m): AssistantMessage[] => {
     if (m.role === "user") return [{ role: "user", text: m.text }];
     if (m.reply.kind === "error") return [];
@@ -158,7 +169,11 @@ export function TaskAssistant() {
     setMessages(next);
     setInput("");
     startAsking(async () => {
-      const reply = await askAssistant(toHistory(next));
+      // Falha de rede vira mensagem de erro em vez de quebrar o painel.
+      const reply: AssistantReply = await askAssistant(toHistory(next)).catch(() => ({
+        kind: "error" as const,
+        text: "Sem conexão com o servidor. Tente de novo.",
+      }));
       const id = nextId.current++;
       setMessages((list) => [
         ...list,
@@ -171,7 +186,12 @@ export function TaskAssistant() {
 
   async function create(message: Extract<Message, { state: string }>) {
     updateDraft(message.id, { state: "saving", error: undefined });
-    const result = await createTaskFromDraft(message.reply.draft);
+    // Sem isso, uma falha de rede deixaria o cartão preso em "Criando…".
+    const result = await createTaskFromDraft(message.reply.draft).catch(() => ({
+      id: undefined,
+      error: "Sem conexão com o servidor. Tente de novo.",
+      fieldErrors: undefined,
+    }));
     if (result.id) {
       updateDraft(message.id, { state: "created", taskId: result.id });
       router.refresh();

@@ -379,13 +379,13 @@ order by total desc;
 | Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
 | Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` aplicada em 07/10 |
 | Login com perfis (Fase 0) | Sim, testado local e em produção |
-| Sem cadastro público + senha temporária (Fase 6, item 1) | Implementado no PR do branch `claude/project-thread-1m9nwa`; falta desligar o cadastro no Supabase e testar |
+| Sem cadastro público + senha temporária (Fase 6, item 1) | Sim (na `main`); cadastro público desligado no Supabase (conferido pelo `test:isolation` em 08/10) |
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
 | Cadastros de agências e tarefas (Fase 1) | Sim: lista, criação, edição e exclusão; checagem de dono na Server Action |
 | Painel com risco (Fase 2) | Sim: contadores, lista do dia agrupada, atualização a cada 60 s, Motion |
 | Tela de campo (Fase 3) | Sim: status em um toque, Desfazer, ocorrências; gestor vê ocorrências na tarefa e no painel |
-| Chat de IA que cria tarefa (escopo ampliado) | Código escrito em 07/10 (botão "Assistente" no cabeçalho do gestor); falta `npm install @google/genai`, `GEMINI_API_KEY` e teste |
-| Assinatura na conclusão (escopo ampliado) | Sim (branch `claude/assinatura`): migration aplicada, `test:isolation` 100% PASS e testado de ponta a ponta no local |
+| Chat de IA que cria tarefa (escopo ampliado) | Sim (na `main` desde 08/10, botão "Assistente" no cabeçalho do gestor): `GEMINI_API_KEY` e `GEMINI_MODEL=gemini-3.5-flash` no `.env.local` e na Vercel (Production); testado no local e em produção |
+| Assinatura na conclusão (escopo ampliado) | Sim (na `main` desde 08/10): migration aplicada, `test:isolation` 100% PASS e testado de ponta a ponta no local |
 | Cenário simulado de dados (Fase 4) | Sim: `npm run seed:demo`, executado em 07/10 às 19:33 (13/13 PASS); contas da demo criadas em produção |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
@@ -413,7 +413,7 @@ Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck
 - **Dependências além da stack base:** `server-only` (impede `admin.ts` no navegador) e `motion` 14 (aprovado na Fase 2).
 - **Painel:** atualização automática a cada 60 s (pausa com a aba oculta); agrupamento "Precisa de atenção" (atrasadas e em risco) e depois por status.
 - **Senha temporária:** marca `must_change_password` em `app_metadata` do Supabase Auth (só o service role altera; sem migration). `proxy.ts` prende o usuário em `/trocar-senha` até trocar; `changePassword` troca com a sessão do usuário, limpa a marca pelo admin e renova o token. Contas da demo e de teste não têm a marca.
-- **Assistente de IA (Gemini):** `@google/genai` só no servidor (`lib/ai/gemini.ts`, `actions/assistant.ts`); chave `GEMINI_API_KEY` e modelo opcional `GEMINI_MODEL` (padrão `gemini-3.8-flash`; o 2.5 já não aceita chaves novas). O Gemini recebe as agências e a equipe do gestor e só **propõe** a tarefa pela ferramenta `criar_tarefa`; a gravação acontece quando o gestor clica em "Criar", por `createTaskFromDraft`, que usa a mesma validação Zod e `checkOwnership` do formulário. A conversa fica só no navegador (nada salvo no banco).
+- **Assistente de IA (Gemini):** `@google/genai` só no servidor (`lib/ai/gemini.ts`, `actions/assistant.ts`); chave `GEMINI_API_KEY` e modelo opcional `GEMINI_MODEL` (padrão `gemini-3.8-flash`; o 2.5 já não aceita chaves novas). O Gemini recebe as agências e a equipe do gestor e só **propõe** a tarefa pela ferramenta `criar_tarefa`; a gravação acontece quando o gestor clica em "Criar", por `createTaskFromDraft`, que usa a mesma validação Zod e `checkOwnership` do formulário. A conversa fica só no navegador (nada salvo no banco); o navegador envia só as últimas 20 mensagens. O assistente **não vê nem edita tarefas existentes** (diz isso e orienta usar o formulário) e pergunta antes de criar sem responsável quando o nome citado não está na equipe. Na Vercel usamos `gemini-3.5-flash`: o `gemini-3.8-flash` deu 503 (alta demanda) em cerca de metade das chamadas em 08/10.
 - **Assinatura obrigatória (campo):** "Concluir" no `/hoje` abre uma folha com o nome de quem recebeu e a assinatura desenhada em `<canvas>` (PNG em data URL, ~12 KB, limite 200 KB). Tabela `task_signatures` (uma por tarefa, sem política de escrita) e função `field_complete_task_with_signature`; `field_update_task_status` passa a recusar `done` e, ao reabrir, apaga a assinatura. O gestor vê a assinatura na tela da tarefa concluída. Concluir pelo formulário do gestor continua possível, sem assinatura.
 - **Gestor pode excluir tarefas** (com confirmação); agência com tarefas não pode ser excluída (FK).
 - **Registrar ocorrência muda a tarefa para "Com problema"** automaticamente; o campo usa "Retomar" para voltar a "Em andamento".
