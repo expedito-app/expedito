@@ -31,7 +31,7 @@ const { data, error } = await admin.auth.admin.createUser({
   password: tempPassword,
   email_confirm: true,
   user_metadata: { full_name: name },
-  app_metadata: { must_change_password: true },
+  app_metadata: { must_change_password: true, expedito_role: "manager" },
 });
 if (error) {
   console.error(

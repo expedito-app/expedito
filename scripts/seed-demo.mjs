@@ -58,6 +58,11 @@ async function ensureUser({ email, name }, managerId = null) {
     : { role: "manager", manager_id: null, full_name: name };
   const { error } = await admin.from("profiles").update(profile).eq("id", user.id);
   if (error) throw error;
+  // Papel no token (o proxy lê daqui e dispensa a consulta ao perfil).
+  const { error: metaErr } = await admin.auth.admin.updateUserById(user.id, {
+    app_metadata: { expedito_role: profile.role },
+  });
+  if (metaErr) throw metaErr;
 
   const c = anonClient();
   const { error: loginErr } = await c.auth.signInWithPassword({ email, password: PW });
@@ -199,9 +204,100 @@ for (const r of rows.filter((x) => x.occurrence)) {
   if (sErr) throw sErr;
 }
 
+// Histórico simulado de 12 meses (só tarefas concluídas, para não poluir o painel
+// do dia): alimenta a página Indicadores e a análise da IA. Gerador com semente
+// fixa, então o histórico é igual a cada execução. Padrões de propósito:
+// pico em mar e out–nov, Maré Alta concentrando "agência fechada", Porto Sul com
+// "faltou documento", prazos concentrados no fim da tarde e pontualidade que
+// cai quando a demanda passa do que a equipe dá conta.
+let seed = 20261009;
+const rand = () => {
+  seed = (seed * 16807) % 2147483647; // Park–Miller (cabe no double sem perder precisão)
+  return (seed - 1) / 2147483646;
+};
+const pick = (items) => items[Math.floor(rand() * items.length)];
+const SEASON = [0.9, 0.95, 1.35, 1.0, 0.95, 0.9, 1.0, 1.05, 1.1, 1.45, 1.5, 0.75]; // jan..dez
+const HOURS = [9, 10, 10, 11, 11, 12, 14, 15, 15, 16, 16, 16, 17];
+const AGENCY_KEYS = ["Atlântico", "Atlântico", "Porto", "Porto", "Maré", "Costa", "Baía"];
+const PREFIX = { Atlântico: "ATMU", Porto: "PSAG", Maré: "MASH", Costa: "CVNU", Baía: "BLMU" };
+const DESCS = ["Retirada do BL original", "Entrega de carta de liberação", "Entrega de procuração", "Retirada de BL para desembaraço", "Entrega de comprovante de pagamento"];
+const spDate = (d) => d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+const spToUtc = (date, hour, minute) => new Date(`${date}T${pad(hour)}:${pad(minute)}:00-03:00`);
+
+const history = [];
+const historyOccurrences = [];
+for (let back = 365; back >= 1; back--) {
+  const day = spDate(new Date(now.getTime() - back * 86_400_000));
+  const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
+  if (weekday === 0) continue;
+  const month = Number(day.slice(5, 7)) - 1;
+  const base = weekday === 6 ? 1 : weekday === 1 ? 5 : 4;
+  const count = Math.max(0, Math.round(base * SEASON[month] + (rand() - 0.5) * 3));
+  const overload = count > 6; // mais de 3 por pessoa no dia
+  for (let i = 0; i < count; i++) {
+    const agency = pick(AGENCY_KEYS);
+    const who = rand() < 0.55 ? bruno : carla;
+    const due = spToUtc(day, pick(HOURS), pick([0, 0, 30]));
+    let lateChance = 0.07 + (overload ? 0.18 : 0) + (agency === "Maré" ? 0.12 : 0);
+    if (who === bruno && overload) lateChance += 0.08;
+    const late = rand() < lateChance;
+    const completed = late
+      ? new Date(due.getTime() + (0.5 + rand() * (rand() < 0.2 ? 30 : 6)) * 3_600_000)
+      : new Date(due.getTime() - (0.3 + rand() * 4) * 3_600_000);
+    const created = new Date(due.getTime() - (3 + rand() * 60) * 3_600_000);
+    const ref = `BL ${PREFIX[agency]}${String(1000000 + Math.floor(rand() * 8999999))}`;
+    history.push({
+      manager_id: ana.id,
+      agency_id: ag[agency],
+      assigned_to: who.id,
+      document_ref: ref,
+      description: pick(DESCS),
+      urgency: rand() < 0.25 ? "high" : rand() < 0.7 ? "medium" : "low",
+      due_at: due.toISOString(),
+      status: "done",
+      created_at: created.toISOString(),
+      updated_at: completed.toISOString(),
+      completed_at: completed.toISOString(),
+    });
+    const occurrenceChance = agency === "Maré" ? 0.14 : agency === "Porto" ? 0.1 : 0.03;
+    if (rand() < occurrenceChance) {
+      historyOccurrences.push({
+        index: history.length - 1,
+        who,
+        type: agency === "Maré" ? "agency_closed" : agency === "Porto" ? "missing_document" : pick(["agency_closed", "missing_document", "other"]),
+        note: agency === "Maré" ? "Agência fechou antes do horário." : agency === "Porto" ? "Faltou a carta de liberação assinada." : "Fila grande; atendimento suspenso.",
+        at: new Date(due.getTime() - rand() * 2 * 3_600_000).toISOString(),
+      });
+    }
+  }
+}
+const historyIds = [];
+for (let i = 0; i < history.length; i += 500) {
+  const { data, error } = await m.from("tasks").insert(history.slice(i, i + 500)).select("id");
+  if (error) throw error;
+  historyIds.push(...data.map((t) => t.id));
+}
+for (const who of [bruno, carla]) {
+  const mine = historyOccurrences.filter((o) => o.who === who);
+  if (!mine.length) continue;
+  const { error } = await who.c.from("task_occurrences").insert(
+    mine.map((o) => ({
+      task_id: historyIds[o.index],
+      manager_id: ana.id,
+      author_id: who.id,
+      type: o.type,
+      note: o.note,
+      created_at: o.at,
+    })),
+  );
+  if (error) throw error;
+}
+console.log(`Histórico: ${history.length} tarefas concluídas e ${historyOccurrences.length} ocorrências nos últimos 12 meses`);
+
 const { data: view, error: vErr } = await m
   .from("tasks_with_risk")
-  .select("document_ref, risk_level, status, due_at");
+  .select("document_ref, risk_level, status, due_at")
+  .in("document_ref", rows.map((r) => r.ref));
 if (vErr) throw vErr;
 
 console.log(`Agora em SP: ${spTime(now)} | Maré Alta fecha ${soonClose.slice(0, 5)} | demais fecham ${normalClose}`);

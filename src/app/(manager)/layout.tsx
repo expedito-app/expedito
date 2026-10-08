@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { ManagerNav } from "@/components/features/manager-nav";
+import { AlertCenter } from "@/components/features/alert-center";
 import { CurrentUserName } from "@/components/features/current-user-name";
 import { RoleGate } from "@/components/features/role-gate";
 import { SignOutButton } from "@/components/features/sign-out-button";
@@ -30,6 +31,7 @@ export default function ManagerLayout({ children }: LayoutProps<"/">) {
           <RoleGate role="manager">{children}</RoleGate>
         </Suspense>
       </main>
+      <AlertCenter />
     </div>
   );
 }

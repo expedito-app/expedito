@@ -6,6 +6,7 @@ import { Suspense } from "react";
 
 const items = [
   { href: "/painel", label: "Painel" },
+  { href: "/indicadores", label: "Indicadores" },
   { href: "/tarefas", label: "Tarefas" },
   { href: "/agencias", label: "Agências" },
   { href: "/equipe", label: "Equipe" },

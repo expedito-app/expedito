@@ -6,7 +6,7 @@ import {
   type Content,
   type FunctionDeclaration,
 } from "@google/genai";
-import { GEMINI_MODEL, getGemini } from "@/lib/ai/gemini";
+import { GEMINI_MODEL, getGemini, isTransient, withRetry } from "@/lib/ai/gemini";
 import { getCurrentProfile } from "@/lib/auth";
 import {
   URGENCY_LABEL,
@@ -74,24 +74,6 @@ const createTaskTool: FunctionDeclaration = {
     required: ["agency_id", "document_ref", "due_at", "urgency"],
   },
 };
-
-// 429 (limite) e 503 (alta demanda) costumam passar em segundos.
-function isTransient(error: unknown): boolean {
-  if (typeof error !== "object" || error === null || !("status" in error)) return false;
-  return error.status === 429 || error.status === 503;
-}
-
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
-  for (const delayMs of [800, 2000]) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (!isTransient(error)) throw error;
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-  }
-  return fn();
-}
 
 async function loadContext() {
   const supabase = await createClient();

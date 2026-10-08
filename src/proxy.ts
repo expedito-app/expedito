@@ -5,10 +5,11 @@ import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import {
   CHANGE_PASSWORD_PATH,
   mustChangePassword,
+  roleFromClaims,
 } from "@/lib/password-change";
 
 const PUBLIC_PATHS = ["/login"];
-const MANAGER_PATHS = ["/painel", "/tarefas", "/agencias", "/equipe"];
+const MANAGER_PATHS = ["/painel", "/indicadores", "/tarefas", "/agencias", "/equipe"];
 const FIELD_PATHS = ["/hoje"];
 const HOME = { manager: "/painel", field: "/hoje" } as const;
 
@@ -60,14 +61,22 @@ export async function proxy(request: NextRequest) {
     return matches(pathname, PUBLIC_PATHS) ? response : redirectTo("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-  if (!profile) {
+  // Papel gravado no token (app_metadata, que só o service role altera) evita
+  // uma consulta ao banco por requisição. Contas antigas sem a marca caem na
+  // consulta ao perfil. A autorização definitiva continua no RLS.
+  let role = roleFromClaims(data?.claims.app_metadata);
+  if (!role) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    role = profile?.role ?? null;
+  }
+  if (!role) {
     return matches(pathname, PUBLIC_PATHS) ? response : redirectTo("/login");
   }
+  const profile = { role };
 
   // Senha temporária: só a tela de troca fica acessível até a senha mudar.
   const onChangePassword = matches(pathname, [CHANGE_PASSWORD_PATH]);

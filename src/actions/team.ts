@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/auth";
-import { MUST_CHANGE_PASSWORD_KEY } from "@/lib/password-change";
+import { MUST_CHANGE_PASSWORD_KEY, ROLE_KEY } from "@/lib/password-change";
 import { fieldUserSchema } from "@/lib/validation/auth";
 import { fromZodError, type FormState } from "@/lib/validation/form-state";
 
@@ -32,7 +32,8 @@ export async function createFieldUser(
       email_confirm: true,
       user_metadata: { full_name: parsed.data.fullName },
       // Senha temporária: troca obrigatória no primeiro acesso.
-      app_metadata: { [MUST_CHANGE_PASSWORD_KEY]: true },
+      // Papel no token: o proxy dispensa a consulta ao perfil a cada página.
+      app_metadata: { [MUST_CHANGE_PASSWORD_KEY]: true, [ROLE_KEY]: "field" },
     });
   if (createError || !created.user) {
     return {

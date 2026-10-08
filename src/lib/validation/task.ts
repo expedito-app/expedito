@@ -39,3 +39,12 @@ export const taskSchema = z.object({
 export type TaskInput = z.infer<typeof taskSchema>;
 
 export const taskStatusFilter = z.enum(TASK_STATUSES).optional().catch(undefined);
+
+/** Busca por BL/documento na lista de tarefas (?q=). Inválido vira "sem busca". */
+export const taskSearchFilter = z
+  .string()
+  .trim()
+  .max(60)
+  .transform((v) => v || undefined)
+  .optional()
+  .catch(undefined);

@@ -39,7 +39,9 @@
 
 **Escopo ampliado (aprovado pelo usuário em 07/10/2026):** IA com **Gemini** (chat que cria tarefa, planos de ação preditivos/preventivos/corretivos), assinatura na conclusão da tarefa, importação de planilhas (CSV e Excel), histórico completo com filtros e, opcional, ordem sugerida das visitas com IA (sem mapas nem trânsito). Plano em `/mnt/project-files/planos/plano-novas-funcionalidades.md` (pasta do projeto no Claude).
 
-**Fora do escopo (não implementar):** recuperação de senha, login social, notificações push, rotas com trânsito e mapas, rastreamento de localização, integrações externas além do Gemini, módulo financeiro, app nativo (React Native), multiempresa compartilhada, base de agências compartilhada.
+**Escopo de gestão (pedido pelo usuário em 08/10/2026):** página Indicadores com período selecionável e análise de IA, exportação CSV (abre no Google Sheets/Excel), importação de tarefas por CSV, alertas em pop-up dentro do app (não é push), papel do usuário no token do proxy e CI no GitHub Actions.
+
+**Fora do escopo (não implementar):** recuperação de senha, login social, notificações push (fora do navegador), rotas com trânsito e mapas, rastreamento de localização, integrações externas além do Gemini, módulo financeiro, app nativo (React Native), multiempresa compartilhada, base de agências compartilhada.
 
 ---
 
@@ -386,6 +388,7 @@ order by total desc;
 | Tela de campo (Fase 3) | Sim: status em um toque, Desfazer, ocorrências; gestor vê ocorrências na tarefa e no painel |
 | Chat de IA que cria tarefa (escopo ampliado) | Sim (na `main` desde 08/10, botão "Assistente" no cabeçalho do gestor): `GEMINI_API_KEY` e `GEMINI_MODEL=gemini-3.5-flash` no `.env.local` e na Vercel (Production); testado no local e em produção |
 | Assinatura na conclusão (escopo ampliado) | Sim (na `main` desde 08/10): migration aplicada, `test:isolation` 100% PASS e testado de ponta a ponta no local |
+| Melhorias de gestão (08/10, PR `claude/melhorias-gestao`) | `/indicadores` (KPIs, série, equipe, agências, mapa de calor, próximos 7 dias, custo de atraso, análise com Gemini), exportar CSV, `/tarefas/importar` (CSV), pop-ups de alerta (gestor e campo), risco e busca por BL em `/tarefas`, Gemini padrão 3.5, papel no token, CI, README em pt-BR, seed com 12 meses de histórico. **Sem migration** |
 | Cenário simulado de dados (Fase 4) | Sim: `npm run seed:demo`, executado em 07/10 às 19:33 (13/13 PASS); contas da demo criadas em produção |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
@@ -399,7 +402,7 @@ order by total desc;
 |---|---|
 | `npm run test:isolation` | Teste de RLS direto pela API: confere que o cadastro público está desligado, dois gestores e um campo; apaga os dados que cria (mantém as contas). Rodar após qualquer mudança em migration, RLS ou Server Action |
 | `npm run scenario:risk` | Recria, para `TEST_MANAGER_UI`, 8 tarefas `TESTE-*` (uma por situação de risco, prazos relativos ao horário atual) e confere a view. `-- --clean` só remove |
-| `npm run seed:demo` | Cenário da apresentação: cria (uma vez) Ana Ribeiro (gestora), Bruno Santos e Carla Mendes (campo), `@expedito.test`, senha `DEMO_PASSWORD`; apaga e recria só os dados da Ana (5 agências fictícias de Santos, 13 tarefas, 2 ocorrências) e confere a view. Prazos de hoje limitados a 23:50 (SP). Funciona se rodado entre 07h e 21h; para a apresentação (19:30–21:30), rodar por volta de 19:15 |
+| `npm run seed:demo` | Cenário da apresentação: cria (uma vez) Ana Ribeiro (gestora), Bruno Santos e Carla Mendes (campo), `@expedito.test`, senha `DEMO_PASSWORD`; apaga e recria só os dados da Ana (5 agências fictícias de Santos, 13 tarefas do dia, 2 ocorrências e ~1.200 tarefas concluídas de histórico dos últimos 12 meses, com semente fixa) e confere a view. Prazos de hoje limitados a 23:50 (SP). Funciona se rodado entre 07h e 21h; para a apresentação (19:30–21:30), rodar por volta de 19:15 |
 | `npm run manager:create -- --email <e-mail> --name "<nome>"` | Cria um gestor com senha temporária (mostrada uma vez no terminal); a troca é obrigatória no primeiro acesso |
 
 Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck`: `PageProps`/`LayoutProps` são gerados pelo Next.
@@ -413,11 +416,17 @@ Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck
 - **Dependências além da stack base:** `server-only` (impede `admin.ts` no navegador) e `motion` 14 (aprovado na Fase 2).
 - **Painel:** atualização automática a cada 60 s (pausa com a aba oculta); agrupamento "Precisa de atenção" (atrasadas e em risco) e depois por status.
 - **Senha temporária:** marca `must_change_password` em `app_metadata` do Supabase Auth (só o service role altera; sem migration). `proxy.ts` prende o usuário em `/trocar-senha` até trocar; `changePassword` troca com a sessão do usuário, limpa a marca pelo admin e renova o token. Contas da demo e de teste não têm a marca.
-- **Assistente de IA (Gemini):** `@google/genai` só no servidor (`lib/ai/gemini.ts`, `actions/assistant.ts`); chave `GEMINI_API_KEY` e modelo opcional `GEMINI_MODEL` (padrão `gemini-3.8-flash`; o 2.5 já não aceita chaves novas). O Gemini recebe as agências e a equipe do gestor e só **propõe** a tarefa pela ferramenta `criar_tarefa`; a gravação acontece quando o gestor clica em "Criar", por `createTaskFromDraft`, que usa a mesma validação Zod e `checkOwnership` do formulário. A conversa fica só no navegador (nada salvo no banco); o navegador envia só as últimas 20 mensagens. O assistente **não vê nem edita tarefas existentes** (diz isso e orienta usar o formulário) e pergunta antes de criar sem responsável quando o nome citado não está na equipe. Na Vercel usamos `gemini-3.5-flash`: o `gemini-3.8-flash` deu 503 (alta demanda) em cerca de metade das chamadas em 08/10.
+- **Assistente de IA (Gemini):** `@google/genai` só no servidor (`lib/ai/gemini.ts`, `actions/assistant.ts`); chave `GEMINI_API_KEY` e modelo opcional `GEMINI_MODEL` (padrão `gemini-3.5-flash` desde 08/10; o 2.5 já não aceita chaves novas). O Gemini recebe as agências e a equipe do gestor e só **propõe** a tarefa pela ferramenta `criar_tarefa`; a gravação acontece quando o gestor clica em "Criar", por `createTaskFromDraft`, que usa a mesma validação Zod e `checkOwnership` do formulário. A conversa fica só no navegador (nada salvo no banco); o navegador envia só as últimas 20 mensagens. O assistente **não vê nem edita tarefas existentes** (diz isso e orienta usar o formulário) e pergunta antes de criar sem responsável quando o nome citado não está na equipe. Na Vercel usamos `gemini-3.5-flash`: o `gemini-3.8-flash` deu 503 (alta demanda) em cerca de metade das chamadas em 08/10.
 - **Assinatura obrigatória (campo):** "Concluir" no `/hoje` abre uma folha com o nome de quem recebeu e a assinatura desenhada em `<canvas>` (PNG em data URL, ~12 KB, limite 200 KB). Tabela `task_signatures` (uma por tarefa, sem política de escrita) e função `field_complete_task_with_signature`; `field_update_task_status` passa a recusar `done` e, ao reabrir, apaga a assinatura. O gestor vê a assinatura na tela da tarefa concluída. Concluir pelo formulário do gestor continua possível, sem assinatura.
 - **Gestor pode excluir tarefas** (com confirmação); agência com tarefas não pode ser excluída (FK).
 - **Registrar ocorrência muda a tarefa para "Com problema"** automaticamente; o campo usa "Retomar" para voltar a "Em andamento".
 - **Status (sem risco) usa estilo neutro**; cores de estado só para risco.
+- **Indicadores (`lib/insights.ts`, `lib/period.ts`):** calculados no servidor sob RLS, pelo prazo da tarefa. "Atrasou" = concluída depois do prazo **ou** `risk_level = overdue` (não recalcula a regra da view). Pontualidade = no prazo ÷ (concluídas + vencidas abertas). Gráficos em SVG puro (`insights-charts.tsx`), sem dependência nova. A análise de IA (`actions/insights.ts`) recalcula o período no servidor e manda ao Gemini só agregados (sem BL nem descrição), com resposta em JSON validada por Zod.
+- **Exportação:** `GET /indicadores/exportar` gera CSV com `;` e BOM (Excel pt-BR e Google Sheets), neutralizando fórmulas. Integração direta com Google Sheets (OAuth) ficou de fora.
+- **Importação (`actions/import.ts`):** CSV até 900 KB/500 linhas, tudo ou nada; agência e responsável casados pelo nome (sem acento/maiúscula) nas listas do próprio gestor. `.xlsx` é recusado com instrução para salvar como CSV (sem dependência nova).
+- **Alertas (`actions/alerts.ts`, `alert-center.tsx`):** pop-ups dentro do app, consulta a cada 60 s com a aba visível; atrasada, vence em ≤ 30 min, em risco, sem responsável e ocorrência nova. Dispensados ficam no `localStorage` até o fim do dia; o id muda quando a situação piora. No campo aparecem no topo.
+- **Papel no token:** `app_metadata.expedito_role` gravado na criação (equipe, `manager:create`, seed). O `proxy.ts` usa a marca e só consulta `profiles` em contas antigas sem ela.
+- **`/tarefas`:** sem filtro mostra abertas + concluídas da última semana (o histórico antigo fica no filtro "Concluída", na busca e em Indicadores); limite de 200 linhas.
 
 ### 5.3 Pendências para a Fase 4 (perguntar ao usuário antes de começar)
 
