@@ -29,7 +29,7 @@
 ### Escopo do MVP
 
 **Dentro (obrigatório)**
-1. Login funcional com os dois perfis. O gestor cria os usuários de campo.
+1. Login funcional com os dois perfis. **Sem cadastro público:** gestores são criados pela administração (`npm run manager:create`) e o gestor cria os usuários de campo. Toda conta nova recebe senha temporária e troca no primeiro acesso.
 2. Cadastro de agências (nome, endereço, horário de atendimento, exigências).
 3. Cadastro de tarefas (agência, documento/BL, prazo, urgência, responsável, status).
 4. Painel do gestor com destaque para tarefas **atrasadas** e **em risco**.
@@ -37,7 +37,9 @@
 
 **Se sobrar tempo:** contadores de atrasos e ocorrências por agência; ordenação sugerida das visitas por prazo e horário da agência.
 
-**Fora do escopo (não implementar):** recuperação de senha, login social, notificações push, rotas com trânsito, rastreamento de localização, integrações externas, módulo financeiro, app nativo (React Native), multiempresa compartilhada, base de agências compartilhada.
+**Escopo ampliado (aprovado pelo usuário em 07/10/2026):** IA com **Gemini** (chat que cria tarefa, planos de ação preditivos/preventivos/corretivos), assinatura na conclusão da tarefa, importação de planilhas (CSV e Excel), histórico completo com filtros e, opcional, ordem sugerida das visitas com IA (sem mapas nem trânsito). Plano em `/mnt/project-files/planos/plano-novas-funcionalidades.md` (pasta do projeto no Claude).
+
+**Fora do escopo (não implementar):** recuperação de senha, login social, notificações push, rotas com trânsito e mapas, rastreamento de localização, integrações externas além do Gemini, módulo financeiro, app nativo (React Native), multiempresa compartilhada, base de agências compartilhada.
 
 ---
 
@@ -75,6 +77,7 @@ expedito/
 ├── src/
 │   ├── app/
 │   │   ├── (auth)/login/        # Página de login
+│   │   ├── (auth)/trocar-senha/ # Troca da senha temporária (primeiro acesso)
 │   │   ├── (manager)/           # Rotas do gestor
 │   │   │   ├── painel/          # Painel do dia
 │   │   │   ├── tarefas/         # Lista, criação e edição de tarefas
@@ -216,7 +219,7 @@ create index occurrences_task_idx     on task_occurrences (task_id);
 
 ### 4.3 Criação de perfil no cadastro
 
-Cadastro público cria **sempre** um gestor. O papel nunca vem de metadados enviados pelo cliente. Usuários de campo são criados somente no servidor (service role) pela Server Action da equipe, que depois insere o perfil `field` com o `manager_id` correto.
+Não há cadastro público (desligado no Supabase: Authentication → "Allow new users to sign up"). Contas criadas pelo admin disparam o trigger, que cria **sempre** um gestor; o papel nunca vem de metadados enviados pelo cliente. Gestores são criados por `npm run manager:create`. Usuários de campo são criados somente no servidor (service role) pela Server Action da equipe, que depois insere o perfil `field` com o `manager_id` correto.
 
 ```sql
 create function handle_new_user() returns trigger
@@ -376,6 +379,7 @@ order by total desc;
 | Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
 | Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário |
 | Login com perfis (Fase 0) | Sim, testado local e em produção |
+| Sem cadastro público + senha temporária (Fase 6, item 1) | Implementado no PR do branch `claude/project-thread-1m9nwa`; falta desligar o cadastro no Supabase e testar |
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
 | Cadastros de agências e tarefas (Fase 1) | Sim: lista, criação, edição e exclusão; checagem de dono na Server Action |
 | Painel com risco (Fase 2) | Sim: contadores, lista do dia agrupada, atualização a cada 60 s, Motion |
@@ -391,9 +395,10 @@ order by total desc;
 
 | Comando | O que faz |
 |---|---|
-| `npm run test:isolation` | Teste de RLS direto pela API: dois gestores e um campo; apaga os dados que cria (mantém as contas). Rodar após qualquer mudança em migration, RLS ou Server Action |
+| `npm run test:isolation` | Teste de RLS direto pela API: confere que o cadastro público está desligado, dois gestores e um campo; apaga os dados que cria (mantém as contas). Rodar após qualquer mudança em migration, RLS ou Server Action |
 | `npm run scenario:risk` | Recria, para `TEST_MANAGER_UI`, 8 tarefas `TESTE-*` (uma por situação de risco, prazos relativos ao horário atual) e confere a view. `-- --clean` só remove |
 | `npm run seed:demo` | Cenário da apresentação: cria (uma vez) Ana Ribeiro (gestora), Bruno Santos e Carla Mendes (campo), `@expedito.test`, senha `DEMO_PASSWORD`; apaga e recria só os dados da Ana (5 agências fictícias de Santos, 13 tarefas, 2 ocorrências) e confere a view. Prazos de hoje limitados a 23:50 (SP). Funciona se rodado entre 07h e 21h; para a apresentação (19:30–21:30), rodar por volta de 19:15 |
+| `npm run manager:create -- --email <e-mail> --name "<nome>"` | Cria um gestor com senha temporária (mostrada uma vez no terminal); a troca é obrigatória no primeiro acesso |
 
 Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck`: `PageProps`/`LayoutProps` são gerados pelo Next.
 
@@ -405,6 +410,7 @@ Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck
 - **`types/database.ts` escrito à mão** (sem login no Supabase CLI). Trocar por `npx supabase gen types typescript --project-id <id>` quando houver acesso; ao mudar o schema, atualizar à mão.
 - **Dependências além da stack base:** `server-only` (impede `admin.ts` no navegador) e `motion` 14 (aprovado na Fase 2).
 - **Painel:** atualização automática a cada 60 s (pausa com a aba oculta); agrupamento "Precisa de atenção" (atrasadas e em risco) e depois por status.
+- **Senha temporária:** marca `must_change_password` em `app_metadata` do Supabase Auth (só o service role altera; sem migration). `proxy.ts` prende o usuário em `/trocar-senha` até trocar; `changePassword` troca com a sessão do usuário, limpa a marca pelo admin e renova o token. Contas da demo e de teste não têm a marca.
 - **Gestor pode excluir tarefas** (com confirmação); agência com tarefas não pode ser excluída (FK).
 - **Registrar ocorrência muda a tarefa para "Com problema"** automaticamente; o campo usa "Retomar" para voltar a "Em andamento".
 - **Status (sem risco) usa estilo neutro**; cores de estado só para risco.

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { LoginForm } from "@/components/features/login-form";
 
 export const metadata: Metadata = { title: "Entrar · Expedito" };
@@ -15,13 +14,8 @@ export default function LoginPage() {
         <LoginForm />
       </div>
       <p className="mt-8 text-sm text-muted">
-        Ainda não tem conta?{" "}
-        <Link
-          href="/cadastro"
-          className="font-medium text-accent underline-offset-4 hover:underline"
-        >
-          Cadastre-se como gestor
-        </Link>
+        O acesso é criado pela administração (gestores) ou pelo seu gestor
+        (equipe de campo).
       </p>
     </>
   );

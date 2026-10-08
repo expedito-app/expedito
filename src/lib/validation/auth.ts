@@ -22,6 +22,11 @@ export const signInSchema = z.object({
   password: z.string().min(1, { error: "Informe a senha." }),
 });
 
-export const signUpSchema = z.object({ fullName, email, password });
+export const changePasswordSchema = z
+  .object({ password, confirmPassword: z.string() })
+  .refine((data) => data.password === data.confirmPassword, {
+    error: "As senhas não conferem.",
+    path: ["confirmPassword"],
+  });
 
 export const fieldUserSchema = z.object({ fullName, email, password });

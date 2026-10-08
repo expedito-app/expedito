@@ -19,18 +19,26 @@ function check(name, ok, detail = "") {
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? `  (${detail})` : ""}`);
 }
 
-async function signUpManager(email, fullName) {
-  const c = anonClient();
-  let { data, error } = await c.auth.signUp({
-    email,
-    password: PW,
-    options: { data: { full_name: fullName } },
-  });
-  if (error?.code === "user_already_exists") {
-    ({ data, error } = await c.auth.signInWithPassword({ email, password: PW }));
+// Gestores são criados pelo admin (não há cadastro público), como em
+// scripts/create-manager.mjs, mas sem senha temporária.
+async function ensureManager(email, fullName) {
+  const { data: list, error: listErr } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  if (listErr) throw listErr;
+  let user = list.users.find((u) => u.email === email);
+  if (!user) {
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password: PW,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
+    if (error) throw new Error(`${email}: ${error.message}`);
+    user = data.user;
   }
+  const c = anonClient();
+  const { error } = await c.auth.signInWithPassword({ email, password: PW });
   if (error) throw new Error(`${email}: ${error.message}`);
-  return { c, id: data.user.id };
+  return { c, id: user.id };
 }
 
 // Reproduz a Server Action createFieldUser (perfil nasce gestor e é convertido).
@@ -58,12 +66,20 @@ async function ensureField(email, fullName, managerId) {
   return { c, id: user.id };
 }
 
-const A = await signUpManager(env.TEST_MANAGER_A, "Gestor A (teste)");
-const B = await signUpManager(env.TEST_MANAGER_B, "Gestor B (teste)");
+const A = await ensureManager(env.TEST_MANAGER_A, "Gestor A (teste)");
+const B = await ensureManager(env.TEST_MANAGER_B, "Gestor B (teste)");
 const F = await ensureField(env.TEST_FIELD_A, "Campo A (teste)", A.id);
 const created = { tasks: [], agencies: [] };
 
 try {
+  console.log("\n# Cadastro");
+  {
+    const probe = `cadastro.publico.${Date.now()}@expedito.test`;
+    const { data, error } = await anonClient().auth.signUp({ email: probe, password: PW });
+    check("cadastro público desligado no Supabase", Boolean(error), error?.code ?? "signUp aceito");
+    if (data?.user) await admin.auth.admin.deleteUser(data.user.id);
+  }
+
   console.log("\n# Perfis");
   const { data: profA } = await A.c.from("profiles").select("id, role");
   check("gestor A vê o próprio perfil e o do seu campo", profA.length === 2 && profA.some((p) => p.id === F.id));
