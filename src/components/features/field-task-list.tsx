@@ -3,6 +3,7 @@
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { updateTaskStatus } from "@/actions/field";
+import { CompletionForm } from "@/components/features/completion-form";
 import { OccurrenceForm } from "@/components/features/occurrence-form";
 import { Button } from "@/components/ui/button";
 import { RiskBadge } from "@/components/ui/risk-badge";
@@ -18,6 +19,7 @@ const TOAST_MS = 6000;
 
 type Status = Enums<"task_status">;
 type Toast = { message: string; undo?: { taskId: string; status: Status } };
+type SheetState = { kind: "occurrence" | "complete"; task: FieldTask } | null;
 
 // Próximo passo do fluxo: um toque por mudança de status.
 function primaryAction(status: Status): { label: string; next: Status } | null {
@@ -120,7 +122,7 @@ export function FieldTaskList({ tasks }: { tasks: FieldTask[] }) {
   const [, startTransition] = useTransition();
   const [toast, setToast] = useState<Toast | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [sheetTask, setSheetTask] = useState<FieldTask | null>(null);
+  const [sheet, setSheet] = useState<SheetState>(null);
 
   useEffect(() => {
     if (!toast) return;
@@ -139,19 +141,29 @@ export function FieldTaskList({ tasks }: { tasks: FieldTask[] }) {
     });
   };
 
-  const onStatus = (task: FieldTask, next: Status) =>
+  // Concluir abre a assinatura; os demais passos mudam o status direto.
+  const onStatus = (task: FieldTask, next: Status) => {
+    if (next === "done") {
+      setSheet({ kind: "complete", task });
+      return;
+    }
     changeStatus(task.id, next, () =>
-      setToast(
-        next === "done"
-          ? { message: `${task.documentRef} concluída`, undo: { taskId: task.id, status: task.status } }
-          : { message: `${task.documentRef} em andamento` },
-      ),
+      setToast({ message: `${task.documentRef} em andamento` }),
     );
+  };
 
-  const closeSheet = useCallback(() => setSheetTask(null), []);
+  const closeSheet = useCallback(() => setSheet(null), []);
   const onOccurrenceDone = useCallback((message: string) => {
-    setSheetTask(null);
+    setSheet(null);
     setToast({ message });
+  }, []);
+  // Desfazer volta ao status anterior; o banco apaga a assinatura da conclusão desfeita.
+  const onCompleted = useCallback((task: FieldTask) => {
+    setSheet(null);
+    setToast({
+      message: `${task.documentRef} concluída`,
+      undo: { taskId: task.id, status: task.status },
+    });
   }, []);
 
   return (
@@ -169,23 +181,31 @@ export function FieldTaskList({ tasks }: { tasks: FieldTask[] }) {
               task={task}
               busy={busyId === task.id}
               onStatus={onStatus}
-              onOccurrence={setSheetTask}
+              onOccurrence={(t) => setSheet({ kind: "occurrence", task: t })}
             />
           ))}
         </AnimatePresence>
       </ul>
 
       <Sheet
-        open={sheetTask !== null}
+        open={sheet !== null}
         onClose={closeSheet}
-        title="Registrar ocorrência"
-        description={sheetTask ? `${sheetTask.documentRef} · ${sheetTask.agencyName}` : undefined}
+        title={sheet?.kind === "complete" ? "Concluir com assinatura" : "Registrar ocorrência"}
+        description={sheet ? `${sheet.task.documentRef} · ${sheet.task.agencyName}` : undefined}
       >
-        {sheetTask && (
+        {sheet?.kind === "occurrence" && (
           <OccurrenceForm
-            key={sheetTask.id}
-            taskId={sheetTask.id}
+            key={sheet.task.id}
+            taskId={sheet.task.id}
             onDone={onOccurrenceDone}
+            onCancel={closeSheet}
+          />
+        )}
+        {sheet?.kind === "complete" && (
+          <CompletionForm
+            key={sheet.task.id}
+            taskId={sheet.task.id}
+            onDone={() => onCompleted(sheet.task)}
             onCancel={closeSheet}
           />
         )}
