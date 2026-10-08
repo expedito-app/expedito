@@ -1,6 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { getCurrentProfile, type Profile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -62,6 +64,43 @@ function toRow(input: TaskInput) {
   };
 }
 
+const draftShape = z.object({
+  agencyId: z.string(),
+  documentRef: z.string(),
+  description: z.string(),
+  urgency: z.string(),
+  dueAt: z.string(),
+  assignedTo: z.string(),
+  status: z.string(),
+});
+
+// Validação, checagem de dono e gravação: usada pelo formulário e pelo assistente.
+async function insertTask(
+  managerId: string,
+  values: Record<(typeof TASK_FIELDS)[number], string>,
+): Promise<FormState & { id?: string }> {
+  const parsed = taskSchema.safeParse(values);
+  if (!parsed.success) return fromZodError(parsed.error, values);
+
+  const supabase = await createClient();
+  const ownership = await checkOwnership(supabase, managerId, parsed.data);
+  if (ownership) {
+    return { error: "Revise os campos destacados.", fieldErrors: ownership, values };
+  }
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .insert({
+      ...toRow(parsed.data),
+      manager_id: managerId,
+      completed_at: parsed.data.status === "done" ? new Date().toISOString() : null,
+    })
+    .select("id")
+    .single();
+  if (error) return { error: "Não foi possível salvar a tarefa.", values };
+  return { id: data.id };
+}
+
 export async function createTask(
   _prev: FormState,
   formData: FormData,
@@ -69,24 +108,26 @@ export async function createTask(
   const manager = await requireManager();
   if (!manager) return NOT_MANAGER;
 
-  const values = readForm(formData, TASK_FIELDS);
-  const parsed = taskSchema.safeParse(values);
-  if (!parsed.success) return fromZodError(parsed.error, values);
-
-  const supabase = await createClient();
-  const ownership = await checkOwnership(supabase, manager.id, parsed.data);
-  if (ownership) {
-    return { error: "Revise os campos destacados.", fieldErrors: ownership, values };
-  }
-
-  const { error } = await supabase.from("tasks").insert({
-    ...toRow(parsed.data),
-    manager_id: manager.id,
-    completed_at: parsed.data.status === "done" ? new Date().toISOString() : null,
-  });
-  if (error) return { error: "Não foi possível salvar a tarefa.", values };
+  const result = await insertTask(manager.id, readForm(formData, TASK_FIELDS));
+  if (!result.id) return result;
 
   redirect("/tarefas");
+}
+
+/** Grava o rascunho confirmado pelo gestor no assistente de IA. */
+export async function createTaskFromDraft(
+  draft: unknown,
+): Promise<FormState & { id?: string }> {
+  const manager = await requireManager();
+  if (!manager) return NOT_MANAGER;
+
+  // Mesmo formato do formulário (texto); o taskSchema valida o conteúdo em seguida.
+  const values = draftShape.safeParse(draft);
+  if (!values.success) return { error: "Rascunho inválido." };
+
+  const result = await insertTask(manager.id, values.data);
+  if (result.id) revalidatePath("/painel");
+  return result;
 }
 
 export async function updateTask(

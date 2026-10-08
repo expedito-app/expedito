@@ -61,7 +61,7 @@
 **Pontos de atenção**
 - Conferir limites e condições atuais do plano gratuito do Supabase e da Vercel (incluindo termos de uso) antes de depender deles.
 - Projetos gratuitos do Supabase podem ser pausados por inatividade. Verificar o status do projeto antes da apresentação.
-- Variáveis de ambiente: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (públicas) e `SUPABASE_SERVICE_ROLE_KEY` (**somente servidor**).
+- Variáveis de ambiente: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (públicas) e `SUPABASE_SERVICE_ROLE_KEY` e `GEMINI_API_KEY` (**somente servidor**).
 
 ---
 
@@ -384,6 +384,7 @@ order by total desc;
 | Cadastros de agências e tarefas (Fase 1) | Sim: lista, criação, edição e exclusão; checagem de dono na Server Action |
 | Painel com risco (Fase 2) | Sim: contadores, lista do dia agrupada, atualização a cada 60 s, Motion |
 | Tela de campo (Fase 3) | Sim: status em um toque, Desfazer, ocorrências; gestor vê ocorrências na tarefa e no painel |
+| Chat de IA que cria tarefa (escopo ampliado) | Código escrito em 07/10 (botão "Assistente" no cabeçalho do gestor); falta `npm install @google/genai`, `GEMINI_API_KEY` e teste |
 | Cenário simulado de dados (Fase 4) | Sim: `npm run seed:demo`, executado em 07/10 às 19:33 (13/13 PASS); contas da demo criadas em produção |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
@@ -411,6 +412,7 @@ Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck
 - **Dependências além da stack base:** `server-only` (impede `admin.ts` no navegador) e `motion` 14 (aprovado na Fase 2).
 - **Painel:** atualização automática a cada 60 s (pausa com a aba oculta); agrupamento "Precisa de atenção" (atrasadas e em risco) e depois por status.
 - **Senha temporária:** marca `must_change_password` em `app_metadata` do Supabase Auth (só o service role altera; sem migration). `proxy.ts` prende o usuário em `/trocar-senha` até trocar; `changePassword` troca com a sessão do usuário, limpa a marca pelo admin e renova o token. Contas da demo e de teste não têm a marca.
+- **Assistente de IA (Gemini):** `@google/genai` só no servidor (`lib/ai/gemini.ts`, `actions/assistant.ts`); chave `GEMINI_API_KEY` e modelo opcional `GEMINI_MODEL` (padrão `gemini-3.8-flash`; o 2.5 já não aceita chaves novas). O Gemini recebe as agências e a equipe do gestor e só **propõe** a tarefa pela ferramenta `criar_tarefa`; a gravação acontece quando o gestor clica em "Criar", por `createTaskFromDraft`, que usa a mesma validação Zod e `checkOwnership` do formulário. A conversa fica só no navegador (nada salvo no banco).
 - **Gestor pode excluir tarefas** (com confirmação); agência com tarefas não pode ser excluída (FK).
 - **Registrar ocorrência muda a tarefa para "Com problema"** automaticamente; o campo usa "Retomar" para voltar a "Em andamento".
 - **Status (sem risco) usa estilo neutro**; cores de estado só para risco.

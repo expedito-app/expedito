@@ -4,6 +4,7 @@ import { ManagerNav } from "@/components/features/manager-nav";
 import { CurrentUserName } from "@/components/features/current-user-name";
 import { RoleGate } from "@/components/features/role-gate";
 import { SignOutButton } from "@/components/features/sign-out-button";
+import { TaskAssistant } from "@/components/features/task-assistant";
 import { PageFallback } from "@/components/ui/page-fallback";
 
 export default function ManagerLayout({ children }: LayoutProps<"/">) {
@@ -16,6 +17,7 @@ export default function ManagerLayout({ children }: LayoutProps<"/">) {
           </Link>
           <ManagerNav />
           <div className="ml-auto flex items-center gap-4">
+            <TaskAssistant />
             <Suspense>
               <CurrentUserName />
             </Suspense>
