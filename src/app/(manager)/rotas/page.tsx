@@ -62,7 +62,6 @@ async function Routes({ searchParams }: { searchParams: SearchParams }) {
             </button>
           </form>
         </nav>
-        <RouteReview date={date} />
       </div>
       <p className="mt-4 text-sm text-muted">
         {`${d}/${m}/${y}`} · ordem sugerida por prazo, horário da agência e distância entre as
@@ -84,6 +83,11 @@ async function Routes({ searchParams }: { searchParams: SearchParams }) {
           para as rotas saírem do lugar certo.
         </p>
       )}
+
+      {/* Fora da linha das datas: as dicas da IA ocupam a largura toda. */}
+      <div className="mt-6">
+        <RouteReview date={date} />
+      </div>
 
       {day.missingCoords.length > 0 && (
         <p className="mt-6 rounded-2xl bg-pastel-amber px-4 py-3 text-sm text-risk-at-risk">
