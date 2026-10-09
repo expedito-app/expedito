@@ -30,3 +30,20 @@ export const companySchema = z
     error: "Informe latitude e longitude, ou deixe as duas em branco.",
     path: ["baseLongitude"],
   });
+
+const decimal = (min: number, max: number, message: string) =>
+  z
+    .string()
+    .trim()
+    // "1.500,50" ou "1500.5": com vírgula, ponto é milhar; sem vírgula, ponto é decimal.
+    .transform((v) => Number(v.includes(",") ? v.replace(/\./g, "").replace(",", ".") : v))
+    .refine((v) => Number.isFinite(v) && v >= min && v <= max, { error: message });
+
+export const DEMURRAGE_FIELDS = ["dailyBrl", "containersPerBl", "daysPerDelay", "baselinePercent"] as const;
+
+export const demurrageSchema = z.object({
+  dailyBrl: decimal(1, 100000, "Informe a diária em reais (ex.: 500)."),
+  containersPerBl: decimal(0.5, 50, "Entre 0,5 e 50."),
+  daysPerDelay: decimal(0.5, 30, "Entre 0,5 e 30 dias."),
+  baselinePercent: decimal(0, 95, "Entre 0% e 95%."),
+});

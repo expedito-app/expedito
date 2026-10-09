@@ -1,4 +1,11 @@
 import "server-only";
+import { getCurrentProfile } from "@/lib/auth";
+import {
+  computeSavings,
+  settingsFromProfile,
+  type DemurrageSettings,
+  type Savings,
+} from "@/lib/demurrage";
 import { OCCURRENCE_LABEL, fromDateTimeLocal, toDateTimeLocal } from "@/lib/format";
 import { addDays, previousPeriod, todayInSaoPaulo, type Period } from "@/lib/period";
 import { toRiskLevel } from "@/lib/risk";
@@ -232,8 +239,16 @@ export type InsightsData = {
   heatmap: { cells: HeatCell[]; hours: number[]; max: number };
   busiest: { label: string; count: number } | null;
   forecast: { days: ForecastDay[]; teamSize: number; normalDaily: number };
-  /** Dias de atraso somados (cada atraso conta ao menos 1 dia), para a estimativa de custo. */
+  /** Dias de atraso somados (cada atraso conta ao menos 1 dia). */
   lateDays: number;
+  /** Demurrage evitado (estimativa com as premissas do gestor). */
+  demurrage: {
+    settings: DemurrageSettings;
+    period: Savings;
+    previous: Savings;
+    /** Por bucket da série, com o acumulado. */
+    series: { key: string; label: string; savedBrl: number; lostBrl: number; cumulativeBrl: number }[];
+  };
   /** Linhas prontas para exportar (CSV). */
   rows: ExportRow[];
 };
@@ -263,7 +278,7 @@ export async function loadInsights(period: Period): Promise<InsightsData> {
   const today = todayInSaoPaulo(now);
   const forecastEnd = addDays(today, 7);
 
-  const [tasks, occurrences, prevTasks, prevOccurrences, members, upcoming] = await Promise.all([
+  const [tasks, occurrences, prevTasks, prevOccurrences, members, upcoming, profile] = await Promise.all([
     fetchTasks(supabase, period.start, period.end),
     fetchOccurrences(supabase, period.start, period.end),
     fetchTasks(supabase, prev.start, prev.end),
@@ -275,7 +290,9 @@ export async function loadInsights(period: Period): Promise<InsightsData> {
       .neq("status", "done")
       .gte("due_at", now.toISOString())
       .lt("due_at", fromDateTimeLocal(`${forecastEnd}T00:00`)),
+    getCurrentProfile(),
   ]);
+  const settings = settingsFromProfile(profile);
 
   const memberName = new Map((members.data ?? []).map((m) => [m.id, m.full_name]));
   const teamSize = Math.max(1, memberName.size);
@@ -454,7 +471,51 @@ export async function loadInsights(period: Period): Promise<InsightsData> {
     busiest: peak && peakCount ? { label: peak.label, count: peakCount } : null,
     forecast: { days: forecastDays, teamSize: memberName.size, normalDaily },
     lateDays,
+    demurrage: demurrageOf(series.buckets, totalsOf(tasks, 0), totalsOf(prevTasks, 0), settings),
     rows,
+  };
+}
+
+function demurrageOf(
+  buckets: Bucket[],
+  totals: Totals,
+  previous: Totals,
+  settings: DemurrageSettings,
+): InsightsData["demurrage"] {
+  let cumulative = 0;
+  return {
+    settings,
+    period: computeSavings(totals.onTime, totals.lateDone + totals.lateOpen, settings),
+    previous: computeSavings(previous.onTime, previous.lateDone + previous.lateOpen, settings),
+    series: buckets.map((b) => {
+      const s = computeSavings(b.onTime, b.late, settings);
+      cumulative += s.savedBrl;
+      return {
+        key: b.key,
+        label: b.label,
+        savedBrl: s.savedBrl,
+        lostBrl: s.lostBrl,
+        cumulativeBrl: cumulative,
+      };
+    }),
+  };
+}
+
+/** Demurrage evitado no mês corrente (card do painel). Leve: só contagens. */
+export async function loadMonthSavings(): Promise<{ savings: Savings; monthLabel: string }> {
+  const supabase = await createClient();
+  const now = new Date();
+  const today = todayInSaoPaulo(now);
+  const start = fromDateTimeLocal(`${today.slice(0, 8)}01T00:00`);
+  const [tasks, profile] = await Promise.all([
+    fetchTasks(supabase, start, now.toISOString()),
+    getCurrentProfile(),
+  ]);
+  const totals = totalsOf(tasks, 0);
+  const month = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: "America/Sao_Paulo" }).format(now);
+  return {
+    savings: computeSavings(totals.onTime, totals.lateDone + totals.lateOpen, settingsFromProfile(profile)),
+    monthLabel: month,
   };
 }
 

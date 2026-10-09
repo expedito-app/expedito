@@ -382,7 +382,7 @@ order by total desc;
 | Repositório no GitHub | Sim: github.com/expedito-app/expedito |
 | Projeto Next.js inicializado | Sim (Next 16.4, `cacheComponents` ligado, `proxy.ts`) |
 | Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
-| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` aplicada em 07/10; `20261009000000_roteirizacao.sql` aplicada em 08/10; `20261009010000_empresa_do_gestor.sql` (PR `claude/empresa-e-apresentacao`) **aplicar antes de publicar esse PR** |
+| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` aplicada em 07/10; `20261009000000_roteirizacao.sql` aplicada em 08/10; `20261009010000_empresa_do_gestor.sql` aplicada em 08/10; `20261009020000_premissas_demurrage.sql` (PR `claude/demurrage-evitado`) **aplicar antes de publicar esse PR** |
 | Login com perfis (Fase 0) | Sim, testado local e em produção |
 | Sem cadastro público + senha temporária (Fase 6, item 1) | Sim (na `main`); cadastro público desligado no Supabase (conferido pelo `test:isolation` em 08/10) |
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
@@ -394,6 +394,7 @@ order by total desc;
 | Melhorias de gestão (08/10, PR `claude/melhorias-gestao`) | `/indicadores` (KPIs, série, equipe, agências, mapa de calor, próximos 7 dias, custo de atraso, análise com Gemini), exportar CSV, `/tarefas/importar` (CSV), pop-ups de alerta (gestor e campo), risco e busca por BL em `/tarefas`, Gemini padrão 3.5, papel no token, CI, README em pt-BR, seed com 12 meses de histórico. **Sem migration** |
 | Roteirização (08/10, PR `claude/roteirizacao`, depende do PR de gestão) | Transporte na Equipe, coordenadas na Agência, `/rotas` (rota do dia por pessoa + revisão com IA), ordem sugerida no `/hoje`, sugestão de responsável no formulário e no assistente, assinatura apagada quando o gestor reabre. **Com migration** |
 | Empresa do gestor + reset + seed da apresentação + redesenho (08/10, PR `claude/empresa-e-apresentacao`) | Gestor novo cadastra empresa e endereço-base no primeiro acesso (`/cadastro-empresa`), edita em `/empresa`; rotas saem da base. `reset:all`, `seed:demo` reescrito (duas empresas, nomes realistas), `seed:apresentacao`, `demo:ocorrencia`. Visual monocromático com sidebar de ícones. **Com migration** |
+| Demurrage evitado (08/10, PR `claude/demurrage-evitado`) | Card preto no painel (economia do mês), seção "Demurrage evitado" em Indicadores (evitado × perdido por período, "como calculamos"), premissas editáveis em Empresa, coluna no CSV, IA cita a economia; seed com "antes" (3 primeiros meses, ~25% de atraso) e "depois" (~7%). **Com migration** |
 | Cenário simulado de dados (Fase 4) | Sim: `npm run seed:demo`, executado em 07/10 às 19:33 (13/13 PASS); contas da demo criadas em produção |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
@@ -439,6 +440,7 @@ Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck
 - **Transporte:** coluna `profiles.transport_mode`; o gestor altera pela Equipe com o cliente admin preso a `manager_id` do gestor logado (profiles não tem política de UPDATE).
 - **Reabrir pelo gestor:** `updateTask` chama `manager_clear_task_signature` quando o status sai de "Concluída"; a função só apaga assinatura de tarefa do próprio gestor que não está concluída.
 - **Empresa do gestor:** colunas `company_name`, `base_address`, `base_latitude/longitude` em `profiles` (migration `20261009010000`). Gestor criado por `manager:create` ganha a marca `needs_company` em `app_metadata`; o `proxy.ts` prende em `/cadastro-empresa` (depois de `/trocar-senha`) até salvar, e `saveCompany` limpa a marca e renova o token. Endereço localizado pelo Nominatim (obrigatório achar ou digitar coordenadas). O campo lê a base do gestor por `current_base()` (security definer). Rotas e sugestão de responsável partem da base.
+- **Demurrage evitado (`lib/demurrage.ts`):** atrasos evitados = tarefas com desfecho (concluídas + vencidas abertas) × taxa de atraso antes do Expedito − atrasos que aconteceram (nunca negativo); custo por atraso = dias por atraso × contêineres por BL × diária. Premissas por gestor em `profiles` (padrão R$ 500/dia, 2 contêineres, 1 dia, 25%), editáveis em `/empresa`. Sempre rotulado como **estimativa**, com "como calculamos" visível. Substituiu o antigo "custo potencial" (parâmetro `?diaria=`).
 - **Nomes da demo:** pessoas e empresas fictícias com nomes realistas; agências usam nomes de armadores reais com dados simulados (declarar como simulado na apresentação).
 - **`/tarefas`:** sem filtro mostra abertas + concluídas da última semana (o histórico antigo fica no filtro "Concluída", na busca e em Indicadores); limite de 200 linhas.
 

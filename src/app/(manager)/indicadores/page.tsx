@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { AiInsights } from "@/components/features/ai-insights";
+import { DemurrageSavings } from "@/components/features/demurrage-savings";
 import {
   ChartLegend,
   HBar,
@@ -37,7 +38,6 @@ function hours(v: number | null): string {
   return `${(v / 24).toFixed(1).replace(".", ",")} dias`;
 }
 
-const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
 function Delta({ now, before, higherIsBetter, format }: {
   now: number | null;
@@ -164,8 +164,6 @@ async function Insights({ searchParams }: { searchParams: SearchParams }) {
     new Date(),
   );
   const data = await loadInsights(period);
-  const dailyRate = Number(first(raw.diaria)?.replace(",", ".") ?? "");
-  const hasRate = Number.isFinite(dailyRate) && dailyRate > 0 && dailyRate < 1_000_000;
   const aiParams = period.preset
     ? { periodo: period.preset }
     : { de: period.fromDate, ate: period.toDate };
@@ -194,6 +192,13 @@ async function Insights({ searchParams }: { searchParams: SearchParams }) {
       <div className="mt-10">
         <Kpis totals={data.totals} previous={data.previous} />
       </div>
+
+      <Section
+        title="Demurrage evitado"
+        hint="Quanto deixou de ser gasto com sobre-estadia porque as entregas saíram no prazo."
+      >
+        <DemurrageSavings {...data.demurrage} />
+      </Section>
 
       <Section title="Análise da IA" hint="Gargalos, tendências e planos de ação a partir dos números do período.">
         <AiInsights params={aiParams} />
@@ -313,49 +318,6 @@ async function Insights({ searchParams }: { searchParams: SearchParams }) {
         </ul>
       </Section>
 
-      <Section
-        title="Custo potencial dos atrasos"
-        hint="Estimativa simples: dias de atraso × diária de armazenagem/demurrage que você informar."
-      >
-        <form action="/indicadores" className="flex flex-wrap items-end gap-3">
-          {period.preset ? (
-            <input type="hidden" name="periodo" value={period.preset} />
-          ) : (
-            <>
-              <input type="hidden" name="de" value={period.fromDate} />
-              <input type="hidden" name="ate" value={period.toDate} />
-            </>
-          )}
-          <label className="flex flex-col gap-1 text-label uppercase text-muted">
-            Diária média (R$)
-            <input
-              name="diaria"
-              inputMode="decimal"
-              defaultValue={hasRate ? String(dailyRate) : ""}
-              placeholder="Ex.: 450"
-              className="h-10 w-36 rounded-full border border-line bg-surface px-3 text-sm normal-case text-ink"
-            />
-          </label>
-          <button
-            type="submit"
-            className="h-10 rounded-full border border-line px-4 text-sm text-ink transition-colors duration-150 hover:bg-surface"
-          >
-            Calcular
-          </button>
-        </form>
-        <p className="mt-4 text-sm text-muted">
-          {data.lateDays} {data.lateDays === 1 ? "dia" : "dias"} de atraso somados no período
-          {hasRate && (
-            <>
-              {" "}≈{" "}
-              <strong className="text-title font-semibold text-ink">
-                {brl.format(data.lateDays * dailyRate)}
-              </strong>
-            </>
-          )}
-          .
-        </p>
-      </Section>
     </>
   );
 }

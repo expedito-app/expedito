@@ -118,6 +118,19 @@ export async function generateInsights(params: unknown): Promise<InsightsReply> 
       acima_do_normal: d.aboveNormal,
     })),
     media_diaria_normal: round1(data.forecast.normalDaily),
+    demurrage_evitado: {
+      premissas: {
+        diaria_por_conteiner_brl: data.demurrage.settings.dailyBrl,
+        conteineres_por_bl: data.demurrage.settings.containersPerBl,
+        dias_por_atraso: data.demurrage.settings.daysPerDelay,
+        taxa_atraso_antes_do_expedito_pct: pct(data.demurrage.settings.baselineLateRate),
+      },
+      taxa_atraso_atual_pct: pct(data.demurrage.period.currentRate),
+      atrasos_evitados: round1(data.demurrage.period.avoided),
+      economia_estimada_brl: Math.round(data.demurrage.period.savedBrl),
+      ainda_perdido_brl: Math.round(data.demurrage.period.lostBrl),
+      economia_periodo_anterior_brl: Math.round(data.demurrage.previous.savedBrl),
+    },
   };
 
   const prompt = `Você é um analista de operações de uma empresa de logística portuária. O gestor de expedição acompanha tarefas externas (retirar/entregar BL e outros documentos em agências de armadores). Atrasos geram custos de armazenagem e demurrage.
@@ -126,7 +139,7 @@ Analise os indicadores abaixo (JSON) e escreva de 3 a 6 análises curtas e acion
 - "alerta": gargalos e riscos (ex.: pessoa sobrecarregada, agência que concentra atrasos ou "agência fechada", dias acima do normal na próxima semana).
 - "tendencia": padrões e sazonalidade (ex.: meses ou dias da semana com alta de tarefas, piora ou melhora da pontualidade vs. período anterior; se a demanda de pico excede o que a equipe atual entrega).
 - "acao": plano de ação preventivo ou corretivo concreto (redistribuir tarefas, antecipar retiradas, conferir documentos antes de sair, reforçar equipe em certo mês).
-Cite números do JSON. Não invente dados que não estão nele. Dias da semana: 0=domingo … 6=sábado.
+Inclua uma análise sobre o demurrage evitado (economia estimada em R$, atrasos evitados e comparação com a taxa de atraso antes do Expedito), deixando claro que é estimativa pelas premissas do gestor. Cite números do JSON. Não invente dados que não estão nele. Dias da semana: 0=domingo … 6=sábado.
 
 ${JSON.stringify(summary)}`;
 
