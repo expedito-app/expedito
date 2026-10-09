@@ -28,7 +28,7 @@ async function EditTask({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      <h2 className="font-serif text-title">{task.document_ref}</h2>
+      <h2 className="text-title font-medium">{task.document_ref}</h2>
       {task.completed_at && (
         <p className="mt-2 text-sm text-muted">
           Concluída em {formatDateTime(task.completed_at)}
@@ -55,7 +55,7 @@ async function EditTask({ params }: { params: Promise<{ id: string }> }) {
       <TaskOccurrences taskId={task.id} />
       <section
         aria-labelledby="excluir-tarefa"
-        className="mt-16 max-w-xl border-t border-line pt-8"
+        className="card mt-4 max-w-2xl"
       >
         <h3
           id="excluir-tarefa"

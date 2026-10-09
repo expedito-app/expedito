@@ -10,6 +10,9 @@
     "test:isolation": "node scripts/isolation-test.mjs",
     "scenario:risk": "node scripts/risk-scenario.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
+    "seed:apresentacao": "node scripts/seed-demo.mjs --para 19:40",
+    "demo:ocorrencia": "node scripts/demo-occurrence.mjs",
+    "reset:all": "node scripts/reset-all.mjs",
     "typecheck": "tsc --noEmit",
     "manager:create": "node scripts/create-manager.mjs"
   },

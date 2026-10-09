@@ -28,7 +28,7 @@ export function TransportSelect({
         defaultValue={value}
         disabled={pending}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="h-9 rounded-md border border-line bg-surface px-2 text-sm text-ink focus:border-accent focus:outline-none"
+        className="h-9 rounded-full border border-line bg-surface px-2 text-sm text-ink focus:border-ink focus:outline-none"
       >
         {TRANSPORT_MODES.map((mode) => (
           <option key={mode} value={mode}>

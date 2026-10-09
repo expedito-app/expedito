@@ -2,34 +2,50 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, type ComponentType, type SVGProps } from "react";
+import {
+  IconBuilding,
+  IconChart,
+  IconHome,
+  IconList,
+  IconRoute,
+  IconSettings,
+  IconUsers,
+} from "@/components/ui/icons";
+import { SidebarTooltip, sidebarButton, sidebarIdle } from "@/components/ui/sidebar";
 
-const items = [
-  { href: "/painel", label: "Painel" },
-  { href: "/indicadores", label: "Indicadores" },
-  { href: "/tarefas", label: "Tarefas" },
-  { href: "/rotas", label: "Rotas" },
-  { href: "/agencias", label: "Agências" },
-  { href: "/equipe", label: "Equipe" },
-] as const;
+type Item = { href: string; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
+
+const items: Item[] = [
+  { href: "/painel", label: "Painel", icon: IconHome },
+  { href: "/indicadores", label: "Indicadores", icon: IconChart },
+  { href: "/tarefas", label: "Tarefas", icon: IconList },
+  { href: "/rotas", label: "Rotas", icon: IconRoute },
+  { href: "/agencias", label: "Agências", icon: IconBuilding },
+  { href: "/equipe", label: "Equipe", icon: IconUsers },
+  { href: "/empresa", label: "Empresa", icon: IconSettings },
+];
 
 function NavLinks({ pathname }: { pathname: string | null }) {
   return (
-    <nav aria-label="Principal" className="flex gap-1">
+    <nav aria-label="Principal" className="flex gap-1 md:flex-col md:gap-2">
       {items.map((item) => {
         const active =
           pathname !== null &&
           (pathname === item.href || pathname.startsWith(`${item.href}/`));
+        const Icon = item.icon;
         return (
           <Link
             key={item.href}
             href={item.href}
+            aria-label={item.label}
             aria-current={active ? "page" : undefined}
-            className={`rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
-              active ? "font-medium text-ink" : "text-muted hover:text-ink"
+            className={`${sidebarButton} ${
+              active ? "bg-white text-ink" : sidebarIdle
             }`}
           >
-            {item.label}
+            <Icon />
+            <SidebarTooltip label={item.label} />
           </Link>
         );
       })}

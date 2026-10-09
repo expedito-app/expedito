@@ -55,9 +55,9 @@ async function Routes({ searchParams }: { searchParams: SearchParams }) {
               type="date"
               name="dia"
               defaultValue={date}
-              className="h-9 rounded-md border border-line bg-surface px-2 text-sm text-ink"
+              className="h-9 rounded-full border border-line bg-surface px-2 text-sm text-ink"
             />
-            <button type="submit" className="h-9 rounded-md border border-line px-3 text-sm hover:bg-surface">
+            <button type="submit" className="h-9 rounded-full border border-line px-3 text-sm hover:bg-surface">
               Ver
             </button>
           </form>
@@ -70,8 +70,23 @@ async function Routes({ searchParams }: { searchParams: SearchParams }) {
         {date === today && " Inclui as atrasadas de dias anteriores."}
       </p>
 
+      {day.base.point ? (
+        <p className="mt-2 text-sm text-muted">
+          Saída: {day.base.companyName} · {day.base.address}
+        </p>
+      ) : (
+        <p className="mt-6 rounded-2xl bg-pastel-amber px-4 py-3 text-sm text-ink">
+          <span aria-hidden>◷ </span>
+          Cadastre o endereço da empresa em{" "}
+          <Link href="/empresa" className="underline underline-offset-4">
+            Empresa
+          </Link>{" "}
+          para as rotas saírem do lugar certo.
+        </p>
+      )}
+
       {day.missingCoords.length > 0 && (
-        <p className="mt-6 rounded-md bg-risk-at-risk-soft px-3 py-2 text-sm text-risk-at-risk">
+        <p className="mt-6 rounded-2xl bg-pastel-amber px-4 py-3 text-sm text-risk-at-risk">
           <span aria-hidden>◷ </span>
           Sem localização: {day.missingCoords.join(", ")}. Edite a agência em{" "}
           <Link href="/agencias" className="underline underline-offset-4">
@@ -81,11 +96,11 @@ async function Routes({ searchParams }: { searchParams: SearchParams }) {
         </p>
       )}
 
-      <div className="mt-10 grid gap-10 md:grid-cols-2">
+      <div className="mt-8 grid gap-4 lg:grid-cols-2">
         {day.members.map((member) => (
-          <section key={member.id} aria-labelledby={`rota-${member.id}`} className="border-t border-line pt-4">
+          <section key={member.id} aria-labelledby={`rota-${member.id}`} className="card">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 id={`rota-${member.id}`} className="font-serif text-title">
+              <h2 id={`rota-${member.id}`} className="text-title font-medium">
                 {member.name}
               </h2>
               <p className="text-sm text-muted">
@@ -104,8 +119,8 @@ async function Routes({ searchParams }: { searchParams: SearchParams }) {
             {member.plan.stops.length ? (
               <ol className="mt-4 flex flex-col">
                 {member.plan.stops.map((stop) => (
-                  <li key={stop.taskId} className="grid grid-cols-[2rem_1fr_auto] gap-3 border-b border-line/70 py-3">
-                    <span className="font-serif text-lg tabular-nums text-muted">{stop.order}</span>
+                  <li key={stop.taskId} className="grid grid-cols-[2rem_1fr_auto] items-center gap-3 border-b border-line/70 py-3 last:border-0">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-canvas text-sm tabular-nums">{stop.order}</span>
                     <div className="min-w-0">
                       <Link
                         href={`/tarefas/${stop.taskId}`}
@@ -134,8 +149,8 @@ async function Routes({ searchParams }: { searchParams: SearchParams }) {
       </div>
 
       {day.unassigned.length > 0 && (
-        <section className="mt-12 border-t border-line pt-4">
-          <h2 className="font-serif text-title">Sem responsável</h2>
+        <section className="card mt-4">
+          <h2 className="text-title font-medium">Sem responsável</h2>
           <p className="mt-1 text-sm text-muted">
             Abra a tarefa: o formulário mostra quem a roteirização sugere.
           </p>

@@ -15,14 +15,14 @@ export async function TaskOccurrences({ taskId }: { taskId: string }) {
   const nameById = new Map((people ?? []).map((p) => [p.id, p.full_name]));
 
   return (
-    <section aria-labelledby="ocorrencias" className="mt-16 max-w-xl border-t border-line pt-8">
+    <section aria-labelledby="ocorrencias" className="card mt-4 max-w-2xl">
       <h3 id="ocorrencias" className="text-label font-medium uppercase text-muted">
         Ocorrências
       </h3>
       {!occurrences?.length ? (
         <p className="mt-2 text-sm text-muted">Nenhuma ocorrência registrada.</p>
       ) : (
-        <ul className="mt-4 divide-y divide-line border-y border-line">
+        <ul className="mt-4 divide-y divide-line">
           {occurrences.map((o) => (
             <li key={o.id} className="py-3 text-sm">
               <p>

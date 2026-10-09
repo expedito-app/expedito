@@ -6,6 +6,7 @@ import {
   suggestAssignee,
   type AssigneeSuggestion,
   type MemberDay,
+  type Point,
   type RoutePlan,
   type RouteStop,
 } from "@/lib/routing";
@@ -58,6 +59,23 @@ function startOf(date: string, now: Date): number {
   return date === todayInSaoPaulo(now) ? Math.max(dayStart, now.getTime()) : dayStart;
 }
 
+export type Base = { companyName: string | null; address: string | null; point: Point | null };
+
+/** Empresa e endereço-base do gestor dono dos dados (ponto de saída das rotas). */
+export async function loadBase(supabase?: Supabase): Promise<Base> {
+  const client = supabase ?? (await createClient());
+  const { data } = await client.rpc("current_base");
+  const row = data?.[0];
+  return {
+    companyName: row?.company_name ?? null,
+    address: row?.base_address ?? null,
+    point:
+      row && row.base_latitude !== null && row.base_longitude !== null
+        ? { lat: row.base_latitude, lng: row.base_longitude }
+        : null,
+  };
+}
+
 async function loadAgencies(supabase: Supabase): Promise<Map<string, AgencyGeo>> {
   const { data } = await supabase
     .from("agencies")
@@ -93,6 +111,7 @@ export type MemberRoute = {
 
 export type DayRoutes = {
   date: string;
+  base: Base;
   members: MemberRoute[];
   unassigned: { id: string; documentRef: string; agencyName: string; due: string }[];
   missingCoords: string[];
@@ -111,7 +130,7 @@ function labelsOf(plan: RoutePlan): MemberRoute["labels"] {
 export async function loadDayRoutes(date: string): Promise<DayRoutes> {
   const supabase = await createClient();
   const now = new Date();
-  const [agencies, tasks, members] = await Promise.all([
+  const [agencies, tasks, members, base] = await Promise.all([
     loadAgencies(supabase),
     openTasksOf(supabase, date, now),
     supabase
@@ -119,6 +138,7 @@ export async function loadDayRoutes(date: string): Promise<DayRoutes> {
       .select("id, full_name, transport_mode")
       .eq("role", "field")
       .order("full_name"),
+    loadBase(supabase),
   ]);
   const startMs = startOf(date, now);
 
@@ -126,13 +146,14 @@ export async function loadDayRoutes(date: string): Promise<DayRoutes> {
     const stops = tasks
       .filter((t) => t.assigned_to === m.id)
       .map((t) => toStop(t, agencies.get(t.agency_id)));
-    const plan = planRoute(stops, m.transport_mode, startMs);
+    const plan = planRoute(stops, m.transport_mode, startMs, base.point);
     return { id: m.id, name: m.full_name, mode: m.transport_mode, plan, labels: labelsOf(plan) };
   });
 
   const usedAgencies = new Set(tasks.map((t) => t.agency_id));
   return {
     date,
+    base,
     members: routes,
     unassigned: tasks
       .filter((t) => !t.assigned_to)
@@ -156,11 +177,16 @@ export async function loadMyRoute(
   const supabase = await createClient();
   const now = new Date();
   const today = todayInSaoPaulo(now);
-  const [agencies, tasks] = await Promise.all([loadAgencies(supabase), openTasksOf(supabase, today, now)]);
+  const [agencies, tasks, base] = await Promise.all([
+    loadAgencies(supabase),
+    openTasksOf(supabase, today, now),
+    loadBase(supabase),
+  ]);
   const plan = planRoute(
     tasks.map((t) => toStop(t, agencies.get(t.agency_id))),
     mode,
     startOf(today, now),
+    base.point,
   );
   return Object.fromEntries(
     plan.stops.map((s) => [
@@ -184,10 +210,11 @@ export async function suggestForTask(input: {
   const supabase = await createClient();
   const now = new Date();
   const date = toDateTimeLocal(input.dueAtIso).slice(0, 10);
-  const [agencies, tasks, members] = await Promise.all([
+  const [agencies, tasks, members, base] = await Promise.all([
     loadAgencies(supabase),
     openTasksOf(supabase, date, now),
     supabase.from("profiles").select("id, full_name, transport_mode").eq("role", "field"),
+    loadBase(supabase),
   ]);
   const agency = agencies.get(input.agencyId);
   if (!agency) return null;
@@ -204,5 +231,5 @@ export async function suggestForTask(input: {
     { id: "nova", document_ref: "nova", agency_id: agency.id, due_at: input.dueAtIso },
     agency,
   );
-  return suggestAssignee(memberDays, candidate, startOf(date, now));
+  return suggestAssignee(memberDays, candidate, startOf(date, now), base.point);
 }

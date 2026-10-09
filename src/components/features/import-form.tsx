@@ -15,7 +15,7 @@ export function ImportForm() {
   const [state, action, pending] = useActionState<ImportState, FormData>(importTasks, {});
 
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
+    <div className="card flex max-w-2xl flex-col gap-6">
       <div className="text-sm text-muted">
         <p>
           Colunas: <strong className="text-ink">Documento</strong>,{" "}
@@ -46,7 +46,7 @@ export function ImportForm() {
           type="file"
           accept=".csv,text/csv"
           required
-          className="text-sm file:mr-4 file:h-10 file:rounded-md file:border file:border-line file:bg-surface file:px-4 file:text-sm file:text-ink"
+          className="text-sm file:mr-4 file:h-10 file:rounded-full file:border file:border-line file:bg-surface file:px-4 file:text-sm file:text-ink"
         />
         <div className="flex gap-3">
           <Button type="submit" disabled={pending}>
@@ -54,7 +54,7 @@ export function ImportForm() {
           </Button>
           <Link
             href="/tarefas"
-            className="inline-flex h-11 items-center rounded-md border border-line px-5 text-sm text-ink hover:bg-surface"
+            className="inline-flex h-11 items-center rounded-full border border-line px-5 text-sm text-ink hover:bg-surface"
           >
             Voltar
           </Link>
@@ -62,7 +62,7 @@ export function ImportForm() {
       </form>
 
       {state.created !== undefined && (
-        <p role="status" className="rounded-md bg-risk-ok-soft px-3 py-2 text-sm text-risk-ok">
+        <p role="status" className="rounded-2xl bg-risk-ok-soft px-3 py-2 text-sm text-risk-ok">
           {state.created} {state.created === 1 ? "tarefa importada" : "tarefas importadas"}.{" "}
           <Link href="/tarefas" className="font-medium underline underline-offset-4">
             Ver tarefas
@@ -70,7 +70,7 @@ export function ImportForm() {
         </p>
       )}
       {state.error && (
-        <div role="alert" className="rounded-md bg-risk-overdue-soft px-3 py-2 text-sm text-risk-overdue">
+        <div role="alert" className="rounded-2xl bg-risk-overdue-soft px-3 py-2 text-sm text-risk-overdue">
           <p>{state.error}</p>
           {state.problems && (
             <ul className="mt-2 list-disc pl-5">

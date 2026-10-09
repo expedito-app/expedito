@@ -21,10 +21,10 @@ async function Dashboard() {
       <p className="mt-2 text-muted first-letter:uppercase">
         {formatLongDate(new Date(generatedAt))}
       </p>
-      <div className="mt-10">
+      <div className="mt-8">
         <DashboardCounters counters={counters} />
       </div>
-      <div className="mt-14">
+      <div className="mt-4">
         {tasks.length ? (
           <DashboardList tasks={tasks} />
         ) : (
@@ -49,7 +49,7 @@ export default function PainelPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-label font-medium uppercase text-muted">Hoje</p>
-          <h1 className="mt-2 font-serif text-display font-semibold">
+          <h1 className="mt-2 text-display font-semibold">
             Painel do dia
           </h1>
         </div>

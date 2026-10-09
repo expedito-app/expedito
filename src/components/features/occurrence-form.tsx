@@ -40,7 +40,7 @@ export function OccurrenceForm({ taskId, onDone, onCancel }: OccurrenceFormProps
           {OCCURRENCE_TYPES.map((t) => (
             <label
               key={t}
-              className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-md border px-4 text-base transition-colors duration-150 ${
+              className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border px-4 text-base transition-colors duration-150 ${
                 type === t ? "border-accent bg-surface font-medium" : "border-line"
               }`}
             >

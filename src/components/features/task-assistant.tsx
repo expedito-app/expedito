@@ -7,6 +7,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { askAssistant, type AssistantReply } from "@/actions/assistant";
 import { createTaskFromDraft } from "@/actions/tasks";
 import { Button } from "@/components/ui/button";
+import { IconSparkle } from "@/components/ui/icons";
+import { SidebarTooltip, sidebarButton } from "@/components/ui/sidebar";
 import {
   MAX_HISTORY,
   MAX_MESSAGE_LENGTH,
@@ -80,7 +82,7 @@ function DraftCard({
   if (s.description) rows.push(["Descrição", s.description]);
 
   return (
-    <div className="rounded-md border border-line bg-paper p-4">
+    <div className="rounded-2xl border border-line bg-paper p-4">
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="contents">
@@ -206,14 +208,17 @@ export function TaskAssistant() {
 
   return (
     <>
-      <Button
-        variant="ghost"
+      <button
+        type="button"
         onClick={() => setOpen(true)}
         aria-expanded={open}
         aria-controls="task-assistant"
+        aria-label="Assistente de tarefas (IA)"
+        className={`${sidebarButton} bg-white/10 text-white hover:bg-white hover:text-ink`}
       >
-        Assistente
-      </Button>
+        <IconSparkle />
+        <SidebarTooltip label="Assistente (IA)" />
+      </button>
       <MotionConfig reducedMotion="user">
         <AnimatePresence>
           {open && (
@@ -243,7 +248,7 @@ export function TaskAssistant() {
                     <p className="text-label font-medium uppercase text-muted">IA</p>
                     <h2
                       id="task-assistant-title"
-                      className="font-serif text-title font-semibold"
+                      className="text-title font-semibold"
                     >
                       Assistente de tarefas
                     </h2>
@@ -263,7 +268,7 @@ export function TaskAssistant() {
                           setInput(EXAMPLE);
                           inputRef.current?.focus();
                         }}
-                        className="mt-3 rounded-md border border-line px-3 py-2 text-left text-ink transition-colors duration-150 hover:bg-surface"
+                        className="mt-3 rounded-2xl border border-line px-3 py-2 text-left text-ink transition-colors duration-150 hover:bg-surface"
                       >
                         “{EXAMPLE}”
                       </button>
@@ -280,7 +285,7 @@ export function TaskAssistant() {
                         className={m.role === "user" ? "ml-10 self-end" : "mr-6"}
                       >
                         {m.role === "user" ? (
-                          <p className="rounded-md bg-surface px-3 py-2 text-sm text-ink">
+                          <p className="rounded-2xl bg-surface px-3 py-2 text-sm text-ink">
                             {m.text}
                           </p>
                         ) : (
@@ -331,7 +336,7 @@ export function TaskAssistant() {
                       }
                     }}
                     placeholder="Ex.: entregar o BL na Hapag sexta até 11h"
-                    className="rounded-md border border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-muted/70 focus:border-accent focus:outline-none"
+                    className="rounded-2xl border border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none"
                   />
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm text-muted">Enter envia · Shift+Enter quebra linha</p>

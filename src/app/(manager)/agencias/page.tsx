@@ -35,7 +35,8 @@ async function AgencyTable() {
     );
   }
   return (
-    <table className="w-full text-left text-sm">
+    <div className="card overflow-x-auto px-6 py-2">
+          <table className="w-full text-left text-sm">
       <thead>
         <tr className="border-b border-line text-label uppercase text-muted">
           <th scope="col" className="py-3 pr-4 font-medium">Agência</th>
@@ -71,6 +72,7 @@ async function AgencyTable() {
         ))}
       </tbody>
     </table>
+          </div>
   );
 }
 

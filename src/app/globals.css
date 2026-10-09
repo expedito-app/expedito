@@ -1,41 +1,72 @@
 @import "tailwindcss";
 
 /*
- * Tokens visuais (CLAUDE.md, seção 3.4): base neutra off-white/grafite,
- * uma única cor de destaque e cores de estado reservadas ao risco.
+ * Visual (CLAUDE.md, seção 3.4): minimalista monocromático. Fundo cinza-azulado
+ * claro, cards brancos, preto como ênfase (sidebar, ação principal, destaque) e
+ * 3–4 pastéis só para categorizar (risco, status, tipos). Uma sans-serif única;
+ * cantos muito arredondados; bordas de 1px quase invisíveis; quase sem sombra.
  */
 @theme {
-  --font-serif: var(--font-fraunces), Georgia, serif;
+  /* Uma família só: -- aponta para a mesma sans (classes antigas). */
   --font-sans: var(--font-inter), system-ui, sans-serif;
+  --: var(--font-inter), system-ui, sans-serif;
 
-  --color-paper: #f7f6f2;
-  --color-surface: #ffffff;
-  --color-ink: #1f2124;
-  --color-muted: #6b6e73;
-  --color-line: #e3e1db;
+  --color-paper: #e8ecf1; /* fundo da página */
+  --color-canvas: #f4f6f9; /* container principal */
+  --color-surface: #ffffff; /* cards */
+  --color-ink: #0e1013;
+  --color-muted: #6b7180;
+  --color-line: #e6e9ee;
 
-  --color-accent: #1d4e89;
+  --color-accent: #0e1013; /* ênfase = preto */
   --color-accent-ink: #ffffff;
 
-  --color-risk-overdue: #a8322d;
-  --color-risk-overdue-soft: #f6e5e3;
-  --color-risk-at-risk: #9a6206;
-  --color-risk-at-risk-soft: #f8eedb;
-  --color-risk-ok: #3f6b4f;
-  --color-risk-ok-soft: #e7efe9;
+  /* Pastéis de categoria */
+  --color-pastel-blue: #dde8f6;
+  --color-pastel-green: #dcefe2;
+  --color-pastel-amber: #f7ebcf;
+  --color-pastel-rose: #f6dfe1;
+  --color-pastel-lilac: #e8e2f6;
 
-  /* Escala tipográfica */
+  /* Risco: texto escuro sobre pastel (nunca só cor: sempre rótulo/ícone) */
+  --color-risk-overdue: #a3302f;
+  --color-risk-overdue-soft: #f6dfe1;
+  --color-risk-at-risk: #8a5a06;
+  --color-risk-at-risk-soft: #f7ebcf;
+  --color-risk-ok: #2f6a46;
+  --color-risk-ok-soft: #dcefe2;
+
+  /* Cantos muito arredondados */
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2rem;
+
+  /* Escala tipográfica: hierarquia por tamanho e peso */
   --text-label: 0.6875rem;
   --text-label--letter-spacing: 0.08em;
   --text-label--line-height: 1rem;
-  --text-display: 2.75rem;
+  --text-display: 2.5rem;
   --text-display--line-height: 1.05;
-  --text-display--letter-spacing: -0.02em;
-  --text-title: 1.75rem;
-  --text-title--line-height: 1.15;
+  --text-display--letter-spacing: -0.03em;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.3;
   --text-title--letter-spacing: -0.01em;
+  --text-metric: 3rem;
+  --text-metric--line-height: 1;
+  --text-metric--letter-spacing: -0.04em;
 
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Card branco arredondado com borda quase invisível e muito respiro. */
+@utility card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-3xl);
+  padding: 1.75rem;
 }
 
 body {
@@ -45,7 +76,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
 }
 

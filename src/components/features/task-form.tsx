@@ -82,7 +82,7 @@ export function TaskForm({
   }, [agencyId, dueAt, autoAssign, touched, members.length]);
 
   return (
-    <form action={formAction} className="flex max-w-xl flex-col gap-6" noValidate>
+    <form action={formAction} className="card flex max-w-2xl flex-col gap-6" noValidate>
       <FormMessage state={state} />
       <Field
         label="BL / documento"
@@ -167,7 +167,7 @@ export function TaskForm({
       {suggestion && (
         <div
           aria-live="polite"
-          className="-mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-line bg-surface px-3 py-2 text-sm"
+          className="-mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-line bg-surface px-3 py-2 text-sm"
         >
           <span className="text-label font-medium uppercase text-accent">Roteirização</span>
           <span>

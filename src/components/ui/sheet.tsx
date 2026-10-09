@@ -60,7 +60,7 @@ export function Sheet({ open, onClose, title, description, children }: SheetProp
             transition={{ duration: 0.22, ease: EASE }}
           >
             <div aria-hidden className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
-            <h2 id="sheet-title" className="font-serif text-title font-semibold">
+            <h2 id="sheet-title" className="text-title font-semibold">
               {title}
             </h2>
             {description && <p className="mt-1 text-sm text-muted">{description}</p>}
