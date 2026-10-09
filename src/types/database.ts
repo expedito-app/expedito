@@ -27,6 +27,10 @@ export type Database = {
           manager_id: string | null;
           created_at: string;
           transport_mode: TransportMode;
+          company_name: string | null;
+          base_address: string | null;
+          base_latitude: number | null;
+          base_longitude: number | null;
         };
         Insert: {
           id: string;
@@ -35,6 +39,10 @@ export type Database = {
           manager_id?: string | null;
           created_at?: string;
           transport_mode?: TransportMode;
+          company_name?: string | null;
+          base_address?: string | null;
+          base_latitude?: number | null;
+          base_longitude?: number | null;
         };
         Update: {
           id?: string;
@@ -43,6 +51,10 @@ export type Database = {
           manager_id?: string | null;
           created_at?: string;
           transport_mode?: TransportMode;
+          company_name?: string | null;
+          base_address?: string | null;
+          base_latitude?: number | null;
+          base_longitude?: number | null;
         };
         Relationships: [];
       };
@@ -230,6 +242,15 @@ export type Database = {
       manager_clear_task_signature: {
         Args: { p_task_id: string };
         Returns: undefined;
+      };
+      current_base: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          company_name: string | null;
+          base_address: string | null;
+          base_latitude: number | null;
+          base_longitude: number | null;
+        }[];
       };
     };
     Enums: {

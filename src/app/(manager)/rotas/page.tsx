@@ -70,6 +70,21 @@ async function Routes({ searchParams }: { searchParams: SearchParams }) {
         {date === today && " Inclui as atrasadas de dias anteriores."}
       </p>
 
+      {day.base.point ? (
+        <p className="mt-2 text-sm text-muted">
+          Saída: {day.base.companyName} · {day.base.address}
+        </p>
+      ) : (
+        <p className="mt-6 rounded-2xl bg-pastel-amber px-4 py-3 text-sm text-ink">
+          <span aria-hidden>◷ </span>
+          Cadastre o endereço da empresa em{" "}
+          <Link href="/empresa" className="underline underline-offset-4">
+            Empresa
+          </Link>{" "}
+          para as rotas saírem do lugar certo.
+        </p>
+      )}
+
       {day.missingCoords.length > 0 && (
         <p className="mt-6 rounded-md bg-risk-at-risk-soft px-3 py-2 text-sm text-risk-at-risk">
           <span aria-hidden>◷ </span>

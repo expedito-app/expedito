@@ -21,3 +21,12 @@ export function roleFromClaims(
   const value = appMetadata?.[ROLE_KEY];
   return value === "manager" || value === "field" ? value : null;
 }
+
+// Gestor recém-criado precisa cadastrar a empresa e o endereço-base (ponto de
+// saída das rotas) antes de usar o sistema. Marca em app_metadata, como a senha.
+export const NEEDS_COMPANY_KEY = "needs_company";
+export const COMPANY_SETUP_PATH = "/cadastro-empresa";
+
+export function needsCompanySetup(appMetadata: UserAppMetadata | undefined): boolean {
+  return appMetadata?.[NEEDS_COMPANY_KEY] === true;
+}

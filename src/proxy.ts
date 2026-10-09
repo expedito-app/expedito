@@ -4,12 +4,14 @@ import type { Database } from "@/types/database";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import {
   CHANGE_PASSWORD_PATH,
+  COMPANY_SETUP_PATH,
   mustChangePassword,
+  needsCompanySetup,
   roleFromClaims,
 } from "@/lib/password-change";
 
 const PUBLIC_PATHS = ["/login"];
-const MANAGER_PATHS = ["/painel", "/indicadores", "/tarefas", "/rotas", "/agencias", "/equipe"];
+const MANAGER_PATHS = ["/painel", "/indicadores", "/tarefas", "/rotas", "/agencias", "/equipe", "/empresa"];
 const FIELD_PATHS = ["/hoje"];
 const HOME = { manager: "/painel", field: "/hoje" } as const;
 
@@ -84,8 +86,19 @@ export async function proxy(request: NextRequest) {
     return onChangePassword ? response : redirectTo(CHANGE_PASSWORD_PATH);
   }
 
+  // Gestor novo: cadastra a empresa e o endereço-base antes de seguir.
+  const onCompanySetup = matches(pathname, [COMPANY_SETUP_PATH]);
+  if (profile.role === "manager" && needsCompanySetup(data?.claims.app_metadata)) {
+    return onCompanySetup ? response : redirectTo(COMPANY_SETUP_PATH);
+  }
+
   const home = HOME[profile.role];
-  if (pathname === "/" || onChangePassword || matches(pathname, PUBLIC_PATHS)) {
+  if (
+    pathname === "/" ||
+    onChangePassword ||
+    onCompanySetup ||
+    matches(pathname, PUBLIC_PATHS)
+  ) {
     return redirectTo(home);
   }
   if (profile.role === "field" && matches(pathname, MANAGER_PATHS)) {

@@ -145,11 +145,12 @@ export function suggestAssignee(
   members: MemberDay[],
   candidate: RouteStop,
   startMs: number,
+  startPoint: Point | null = null,
 ): AssigneeSuggestion | null {
   if (!members.length) return null;
   const ranking = members.map((m) => {
-    const before = planRoute(m.stops, m.mode, startMs);
-    const after = planRoute([...m.stops, candidate], m.mode, startMs);
+    const before = planRoute(m.stops, m.mode, startMs, startPoint);
+    const after = planRoute([...m.stops, candidate], m.mode, startMs, startPoint);
     const extraMin = Math.max(0, after.totalMin - before.totalMin);
     const late = Math.max(0, after.lateCount - before.lateCount);
     const load = m.stops.length;
