@@ -12,14 +12,16 @@
 //
 // Duas empresas (isolamento entre gestores), com contas criadas uma vez e
 // reaproveitadas; os dados de domínio são apagados e recriados a cada execução.
-// Senha de todas as contas: DEMO_PASSWORD (.env.test.local).
+// Senha de todas as contas: DEMO_PASSWORD (.env.test.local); se não existir,
+// o script gera uma senha forte, grava no arquivo e mostra no terminal.
 import { createClient } from "@supabase/supabase-js";
 import { deflateSync } from "node:zlib";
-import { loadEnv } from "./load-env.mjs";
+import { ensureDemoPassword, loadEnv } from "./load-env.mjs";
 
-const env = loadEnv(["DEMO_PASSWORD"]);
+const env = loadEnv([]);
+const demo = await ensureDemoPassword();
 const URL = env.NEXT_PUBLIC_SUPABASE_URL;
-const PW = env.DEMO_PASSWORD;
+const PW = demo.password;
 const noSession = { auth: { persistSession: false, autoRefreshToken: false } };
 const admin = createClient(URL, env.SUPABASE_SERVICE_ROLE_KEY, noSession);
 const anonClient = () => createClient(URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, noSession);
@@ -467,7 +469,12 @@ console.log(`Linha do tempo de hoje (Rota Litoral), a partir das ${at}:`);
 for (const r of todayRows) {
   console.log(`  prazo ${spClock(new Date(r.due))}  ${r.ref.padEnd(16)} ${(r.who?.name ?? "sem responsável").padEnd(18)} ${r.live}`);
 }
-console.log(`\nContas (senha DEMO_PASSWORD):`);
+console.log(
+  demo.created
+    ? `\nSenha de TODAS as contas (gerada agora e gravada em .env.test.local): ${PW}`
+    : `\nSenha de todas as contas: a de DEMO_PASSWORD no .env.test.local (${PW}).`,
+);
+console.log(`Contas:`);
 console.log(`  Gestora  mariana.albuquerque@rotalitoral.test   (${COMPANY_1.name})`);
 console.log(`  Campo    rafael.monteiro@ · juliana.pacheco@ · thiago.nascimento@ · camila.duarte@ (rotalitoral.test)`);
 console.log(`  Gestor   eduardo.vasconcelos@atlanticacomissaria.test   (${COMPANY_2.name})`);

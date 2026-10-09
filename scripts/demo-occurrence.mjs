@@ -2,9 +2,10 @@
 // se fosse pelo celular, para o pop-up aparecer no painel da gestora em até 1 min.
 // Uso: npm run demo:ocorrencia
 import { createClient } from "@supabase/supabase-js";
-import { loadEnv } from "./load-env.mjs";
+import { ensureDemoPassword, loadEnv } from "./load-env.mjs";
 
-const env = loadEnv(["DEMO_PASSWORD"]);
+const env = loadEnv([]);
+await ensureDemoPassword();
 const c = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
