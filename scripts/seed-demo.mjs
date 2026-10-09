@@ -18,6 +18,7 @@ const anonClient = () => createClient(URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, no
 const MANAGER = { email: "ana.ribeiro@expedito.test", name: "Ana Ribeiro" };
 const BRUNO = { email: "bruno.santos@expedito.test", name: "Bruno Santos", transport: "motorcycle" };
 const CARLA = { email: "carla.mendes@expedito.test", name: "Carla Mendes", transport: "transit" };
+const DIEGO = { email: "diego.alves@expedito.test", name: "Diego Alves", transport: "car" };
 
 const spParts = (d) => {
   const [hh, mm] = new Intl.DateTimeFormat("en-CA", {
@@ -84,6 +85,7 @@ if (nowHour < 7 || nowHour >= 21) {
 const ana = await ensureUser(MANAGER);
 const bruno = await ensureUser(BRUNO, ana.id);
 const carla = await ensureUser(CARLA, ana.id);
+const diego = await ensureUser(DIEGO, ana.id);
 const m = ana.c;
 
 // Remove o cenário anterior da gestora (ocorrências caem junto com as tarefas).
@@ -154,6 +156,36 @@ const { data: agencies, error: aErr } = await m
       closes_at: normalClose,
       requirements: null,
       notes: "Aceita retirada por terceiros com autorização simples.",
+    },
+    {
+      name: "Valongo Port Services",
+      address: "Rua Visconde do Embaré, 140 – Valongo, Santos/SP",
+      latitude: -23.9302,
+      longitude: -46.3338,
+      opens_at: "08:00",
+      closes_at: "17:00",
+      requirements: "Procuração com firma reconhecida.",
+      notes: "Perto da Baía e da Atlântico: dá para juntar as visitas.",
+    },
+    {
+      name: "Ponta da Praia Shipping",
+      address: "Av. Almirante Saldanha da Gama, 89 – Ponta da Praia, Santos/SP",
+      latitude: -23.9862,
+      longitude: -46.3012,
+      opens_at: "09:00",
+      closes_at: "16:00",
+      requirements: "Carta de liberação original.",
+      notes: "Longe do Centro (~7 km): evite encaixar entre visitas do Centro.",
+    },
+    {
+      name: "Macuco Agência Marítima",
+      address: "Av. Pedro Lessa, 1500 – Macuco, Santos/SP",
+      latitude: -23.9561,
+      longitude: -46.3081,
+      opens_at: "08:30",
+      closes_at: "17:30",
+      requirements: null,
+      notes: null,
     },
   ].map((a) => ({ ...a, manager_id: ana.id })))
   .select("id, name");
@@ -228,8 +260,8 @@ const rand = () => {
 const pick = (items) => items[Math.floor(rand() * items.length)];
 const SEASON = [0.9, 0.95, 1.35, 1.0, 0.95, 0.9, 1.0, 1.05, 1.1, 1.45, 1.5, 0.75]; // jan..dez
 const HOURS = [9, 10, 10, 11, 11, 12, 14, 15, 15, 16, 16, 16, 17];
-const AGENCY_KEYS = ["Atlântico", "Atlântico", "Porto", "Porto", "Maré", "Costa", "Baía"];
-const PREFIX = { Atlântico: "ATMU", Porto: "PSAG", Maré: "MASH", Costa: "CVNU", Baía: "BLMU" };
+const AGENCY_KEYS = ["Atlântico", "Atlântico", "Porto", "Porto", "Maré", "Costa", "Baía", "Valongo", "Ponta", "Macuco"];
+const PREFIX = { Atlântico: "ATMU", Porto: "PSAG", Maré: "MASH", Costa: "CVNU", Baía: "BLMU", Valongo: "VPSU", Ponta: "PPSH", Macuco: "MCAM" };
 const DESCS = ["Retirada do BL original", "Entrega de carta de liberação", "Entrega de procuração", "Retirada de BL para desembaraço", "Entrega de comprovante de pagamento"];
 const spDate = (d) => d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 const spToUtc = (date, hour, minute) => new Date(`${date}T${pad(hour)}:${pad(minute)}:00-03:00`);
@@ -241,12 +273,14 @@ for (let back = 365; back >= 1; back--) {
   const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
   if (weekday === 0) continue;
   const month = Number(day.slice(5, 7)) - 1;
-  const base = weekday === 6 ? 1 : weekday === 1 ? 5 : 4;
+  const base = (weekday === 6 ? 1 : weekday === 1 ? 5 : 4) * (back <= 90 ? 1.4 : 1);
   const count = Math.max(0, Math.round(base * SEASON[month] + (rand() - 0.5) * 3));
-  const overload = count > 6; // mais de 3 por pessoa no dia
+  const overload = count > (back <= 90 ? 9 : 6); // mais de 3 por pessoa no dia
   for (let i = 0; i < count; i++) {
     const agency = pick(AGENCY_KEYS);
-    const who = rand() < 0.55 ? bruno : carla;
+    // Diego entrou na equipe há 3 meses (mostra o efeito na carga e na pontualidade).
+    const r = rand();
+    const who = back <= 90 ? (r < 0.4 ? bruno : r < 0.75 ? carla : diego) : r < 0.55 ? bruno : carla;
     const due = spToUtc(day, pick(HOURS), pick([0, 0, 30]));
     let lateChance = 0.07 + (overload ? 0.18 : 0) + (agency === "Maré" ? 0.12 : 0);
     if (who === bruno && overload) lateChance += 0.08;
@@ -304,6 +338,40 @@ for (const who of [bruno, carla]) {
 }
 console.log(`Histórico: ${history.length} tarefas concluídas e ${historyOccurrences.length} ocorrências nos últimos 12 meses`);
 
+// Amanhã: um dia cheio para testar Rotas (aba Amanhã), a sugestão de
+// responsável e o assistente, independente da hora em que o seed roda.
+const tomorrowDate = spDate(new Date(now.getTime() + 86_400_000));
+const at = (hh, mm = 0) => spToUtc(tomorrowDate, hh, mm).toISOString();
+const tomorrowRows = [
+  ["Atlântico", bruno, 10, 0, "high", "Retirada do BL original"],
+  ["Baía", bruno, 10, 30, "medium", "Entrega de carta de indenidade"],
+  ["Valongo", bruno, 11, 0, "medium", "Retirada de BL para desembaraço"],
+  ["Ponta", bruno, 11, 30, "high", "Entrega da carta de liberação original"],
+  ["Porto", carla, 9, 30, "medium", "Entrega de procuração"],
+  ["Maré", carla, 12, 0, "high", "Retirada do BL original"],
+  ["Costa", carla, 15, 0, "low", "Entrega de comprovante de pagamento"],
+  ["Macuco", diego, 10, 0, "medium", "Retirada de BL"],
+  ["Ponta", diego, 14, 0, "medium", "Retirada do BL original"],
+  ["Costa", diego, 16, 0, "low", "Entrega de procuração"],
+  ["Atlântico", null, 15, 30, "medium", "Retirada do BL original"],
+  ["Valongo", null, 16, 0, "high", "Entrega de carta de liberação"],
+  ["Macuco", null, 11, 0, "low", "Retirada de cópia não negociável"],
+];
+const { error: tmErr } = await m.from("tasks").insert(
+  tomorrowRows.map(([agency, who, hh, mm, urgency, desc]) => ({
+    manager_id: ana.id,
+    agency_id: ag[agency],
+    assigned_to: who?.id ?? null,
+    document_ref: `BL ${PREFIX[agency]}${String(1000000 + Math.floor(rand() * 8999999))}`,
+    description: desc,
+    urgency,
+    due_at: at(hh, mm),
+    status: "pending",
+  })),
+);
+if (tmErr) throw tmErr;
+console.log(`Amanhã (${tomorrowDate}): ${tomorrowRows.length} tarefas, 3 sem responsável`);
+
 const { data: view, error: vErr } = await m
   .from("tasks_with_risk")
   .select("document_ref, risk_level, status, due_at")
@@ -311,7 +379,7 @@ const { data: view, error: vErr } = await m
 if (vErr) throw vErr;
 
 console.log(`Agora em SP: ${spTime(now)} | Maré Alta fecha ${soonClose.slice(0, 5)} | demais fecham ${normalClose}`);
-console.log(`Contas: ${MANAGER.email} (gestora), ${BRUNO.email} e ${CARLA.email} (campo)\n`);
+console.log(`Contas: ${MANAGER.email} (gestora), ${BRUNO.email}, ${CARLA.email} e ${DIEGO.email} (campo)\n`);
 let failures = 0;
 for (const r of rows) {
   const v = view.find((x) => x.document_ref === r.ref);

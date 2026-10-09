@@ -62,6 +62,7 @@ Cenário **simulado**, com agências fictícias de Santos e 12 meses de históri
 | Gestora | `ana.ribeiro@expedito.test` |
 | Campo | `bruno.santos@expedito.test` |
 | Campo | `carla.mendes@expedito.test` |
+| Campo | `diego.alves@expedito.test` |
 
 A senha é informada na apresentação.
 
