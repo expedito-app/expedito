@@ -31,6 +31,10 @@ export type Database = {
           base_address: string | null;
           base_latitude: number | null;
           base_longitude: number | null;
+          demurrage_daily_brl: number;
+          containers_per_bl: number;
+          demurrage_days_per_delay: number;
+          baseline_late_rate: number;
         };
         Insert: {
           id: string;
@@ -43,6 +47,10 @@ export type Database = {
           base_address?: string | null;
           base_latitude?: number | null;
           base_longitude?: number | null;
+          demurrage_daily_brl?: number;
+          containers_per_bl?: number;
+          demurrage_days_per_delay?: number;
+          baseline_late_rate?: number;
         };
         Update: {
           id?: string;
@@ -55,6 +63,10 @@ export type Database = {
           base_address?: string | null;
           base_latitude?: number | null;
           base_longitude?: number | null;
+          demurrage_daily_brl?: number;
+          containers_per_bl?: number;
+          demurrage_days_per_delay?: number;
+          baseline_late_rate?: number;
         };
         Relationships: [];
       };

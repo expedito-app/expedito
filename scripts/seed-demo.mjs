@@ -163,6 +163,11 @@ async function ensureUser({ email, name, transport }, manager = null, company = 
         base_address: company.address,
         base_latitude: company.lat,
         base_longitude: company.lng,
+        // Premissas de demurrage padrão (o gestor ajusta em Empresa).
+        demurrage_daily_brl: 500,
+        containers_per_bl: 2,
+        demurrage_days_per_delay: 1,
+        baseline_late_rate: 0.25,
       };
   const { error } = await admin.from("profiles").update(profile).eq("id", user.id);
   if (error) throw new Error(`${email}: ${error.message}`);
@@ -359,7 +364,7 @@ const SEASON = [0.9, 0.95, 1.35, 1.0, 0.95, 0.9, 1.0, 1.05, 1.1, 1.45, 1.5, 0.75
 const HOURS = [9, 10, 10, 11, 11, 12, 14, 15, 15, 16, 16, 16, 17];
 const DESCS = ["Retirada do BL original", "Entrega de carta de liberação", "Entrega de procuração", "Retirada de BL para desembaraço", "Entrega de comprovante de pagamento"];
 
-async function history(manager, ag, days, membersFor, perDay) {
+async function history(manager, ag, days, membersFor, perDay, adoptedDaysAgo = days) {
   const keys = Object.keys(ag);
   const weights = keys.flatMap((k) => (k === "maersk" || k === "msc" ? [k, k, k] : k === "cma" || k === "hapag" ? [k, k] : [k]));
   const rows = [];
@@ -377,7 +382,11 @@ async function history(manager, ag, days, membersFor, perDay) {
       const agency = pick(weights);
       const who = pick(team);
       const due = spAt(day, pick(HOURS), pick([0, 0, 30]));
-      const lateChance = 0.06 + (overload ? 0.17 : 0) + (agency === "zim" ? 0.14 : 0) + (agency === "msc" ? 0.05 : 0);
+      // Antes do Expedito (planilha/WhatsApp) atrasava ~1 em 4; depois, ~1 em 15.
+      const before = back > adoptedDaysAgo;
+      const lateChance = before
+        ? 0.2 + (overload ? 0.1 : 0) + (agency === "zim" ? 0.1 : 0)
+        : 0.035 + (overload ? 0.1 : 0) + (agency === "zim" ? 0.1 : 0) + (agency === "msc" ? 0.03 : 0);
       const late = rand() < lateChance;
       const completed = late
         ? new Date(due.getTime() + (0.5 + rand() * (rand() < 0.2 ? 30 : 6)) * 3_600_000)
@@ -436,7 +445,9 @@ async function history(manager, ag, days, membersFor, perDay) {
   return { tasks: rows.length, occurrences: occ.length };
 }
 
-const h1 = await history(mariana, ag1, 365, (back) => (back <= 90 ? [rafael, juliana, thiago, camila] : [rafael, juliana, thiago]), 7);
+// Rota Litoral adotou o Expedito há 9 meses (270 dias): os 3 primeiros meses do
+// histórico são o "antes" e mostram a virada em Indicadores > Demurrage evitado.
+const h1 = await history(mariana, ag1, 365, (back) => (back <= 90 ? [rafael, juliana, thiago, camila] : [rafael, juliana, thiago]), 7, 270);
 const h2 = await history(eduardo, ag2, 90, () => [lucas, patricia], 3);
 
 // Empresa 2: poucas tarefas hoje (isolamento: a Mariana não vê nada disto).
@@ -461,6 +472,7 @@ if (e2Err) throw e2Err;
 const at = spClock(anchor);
 console.log(`\nCenário pronto. Âncora: ${at} de ${today}${paraArg ? " (apresentação)" : ""}.`);
 console.log(`Agências fecham ${lateClose}; ZIM fecha ${closeSoon} (regra "fecha em 1 h").`);
+console.log(`Premissas de demurrage: R$ 500/dia por contêiner, 2 contêineres por BL, 1 dia por atraso, 25% de atraso antes do Expedito (editáveis em Empresa).`);
 console.log(`Histórico: Rota Litoral ${h1.tasks} tarefas / ${h1.occurrences} ocorrências (12 meses); Atlântica ${h2.tasks} / ${h2.occurrences} (90 dias).`);
 console.log(`Amanhã (${tomorrow}): ${tomorrowRows.length} tarefas, 3 sem responsável.\n`);
 console.log(`Linha do tempo de hoje (Rota Litoral), a partir das ${at}:`);

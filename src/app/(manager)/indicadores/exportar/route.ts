@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { getCurrentProfile } from "@/lib/auth";
 import { STATUS_LABEL, URGENCY_LABEL, formatFullDateTime } from "@/lib/format";
 import { OUTCOME_LABEL, loadInsights } from "@/lib/insights";
+import { costPerDelay } from "@/lib/demurrage";
 import { resolvePeriod } from "@/lib/period";
 
 // Exporta as tarefas do período em CSV (abre no Google Sheets e no Excel).
@@ -44,7 +45,9 @@ export async function GET(request: NextRequest) {
     "Concluída em",
     "Resultado",
     "Atraso (h)",
+    "Demurrage estimado (R$)",
   ];
+  const unitCost = costPerDelay(data.demurrage.settings);
   const lines = data.rows.map((r) =>
     [
       r.documentRef,
@@ -56,6 +59,7 @@ export async function GET(request: NextRequest) {
       r.completedAt ? formatFullDateTime(r.completedAt) : null,
       OUTCOME_LABEL[r.outcome],
       decimal(r.delayHours),
+      r.delayHours !== null ? unitCost.toFixed(2).replace(".", ",") : null,
     ]
       .map(cell)
       .join(";"),

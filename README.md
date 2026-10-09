@@ -28,6 +28,7 @@ O Expedito é uma aplicação web com dois perfis.
   - mapa de calor de dia × hora;
   - carga dos próximos 7 dias;
   - estimativa de custo dos atrasos.
+- **Demurrage evitado**: quanto a empresa deixou de gastar com sobre-estadia porque as entregas saíram no prazo. Compara a taxa de atraso antes e depois do sistema, com premissas ajustáveis (diária, contêineres por BL, dias por atraso) e o cálculo sempre visível. Aparece em destaque no painel e mês a mês em Indicadores.
 - **Análise com IA (Gemini)**: aponta gargalos, sazonalidade e planos de ação a partir dos números do período. A IA recebe só dados agregados.
 - **Assistente de IA** que cadastra tarefas a partir de linguagem natural ("retirar o BL MSCU123 na Maersk amanhã até 15h, urgente, com o Bruno"). O gestor confirma antes de gravar.
 - **Planilhas**:

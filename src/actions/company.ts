@@ -7,7 +7,12 @@ import { geocodeAddress } from "@/lib/geocode";
 import { NEEDS_COMPANY_KEY } from "@/lib/password-change";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { COMPANY_FIELDS, companySchema } from "@/lib/validation/company";
+import {
+  COMPANY_FIELDS,
+  DEMURRAGE_FIELDS,
+  companySchema,
+  demurrageSchema,
+} from "@/lib/validation/company";
 import { fromZodError, readForm, type FormState } from "@/lib/validation/form-state";
 
 /**
@@ -73,4 +78,33 @@ export async function saveCompany(_prev: FormState, formData: FormData): Promise
 
   refresh();
   return { success: "Empresa atualizada. As rotas passam a sair deste endereço." };
+}
+
+/** Premissas do cálculo de demurrage evitado (Indicadores e painel). */
+export async function saveDemurrageSettings(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const manager = await getCurrentProfile();
+  if (manager?.role !== "manager") return { error: "Apenas gestores alteram as premissas." };
+
+  const values = readForm(formData, DEMURRAGE_FIELDS);
+  const parsed = demurrageSchema.safeParse(values);
+  if (!parsed.success) return fromZodError(parsed.error, values);
+
+  const { data, error } = await createAdminClient()
+    .from("profiles")
+    .update({
+      demurrage_daily_brl: parsed.data.dailyBrl,
+      containers_per_bl: parsed.data.containersPerBl,
+      demurrage_days_per_delay: parsed.data.daysPerDelay,
+      baseline_late_rate: parsed.data.baselinePercent / 100,
+    })
+    .eq("id", manager.id)
+    .eq("role", "manager")
+    .select("id");
+  if (error || !data.length) return { error: "Não foi possível salvar as premissas.", values };
+
+  refresh();
+  return { success: "Premissas salvas. Painel e Indicadores já usam os novos valores." };
 }
