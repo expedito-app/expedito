@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/auth";
 import { MUST_CHANGE_PASSWORD_KEY, ROLE_KEY } from "@/lib/password-change";
-import { fieldUserSchema } from "@/lib/validation/auth";
+import { fieldUserSchema, transportUpdateSchema } from "@/lib/validation/auth";
 import { fromZodError, type FormState } from "@/lib/validation/form-state";
 
 // Cria um usuário de campo vinculado ao gestor logado (CLAUDE.md, seção 4.3).
@@ -21,6 +21,7 @@ export async function createFieldUser(
     fullName: formData.get("fullName"),
     email: formData.get("email"),
     password: formData.get("password"),
+    transportMode: formData.get("transportMode"),
   });
   if (!parsed.success) return fromZodError(parsed.error);
 
@@ -51,6 +52,7 @@ export async function createFieldUser(
       role: "field",
       manager_id: manager.id,
       full_name: parsed.data.fullName,
+      transport_mode: parsed.data.transportMode,
     })
     .eq("id", created.user.id);
 
@@ -64,4 +66,33 @@ export async function createFieldUser(
   return {
     success: `${parsed.data.fullName} foi adicionado à equipe. Passe a senha temporária; ela será trocada no primeiro acesso.`,
   };
+}
+
+/** Troca o meio de transporte de alguém da equipe do gestor logado. */
+export async function updateTransportMode(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const manager = await getCurrentProfile();
+  if (!manager || manager.role !== "manager") {
+    return { error: "Apenas gestores podem alterar a equipe." };
+  }
+  const parsed = transportUpdateSchema.safeParse({
+    memberId: formData.get("memberId"),
+    transportMode: formData.get("transportMode"),
+  });
+  if (!parsed.success) return { error: "Escolha um meio de transporte válido." };
+
+  // profiles não tem política de UPDATE: o admin altera, preso ao gestor logado.
+  const { data, error } = await createAdminClient()
+    .from("profiles")
+    .update({ transport_mode: parsed.data.transportMode })
+    .eq("id", parsed.data.memberId)
+    .eq("role", "field")
+    .eq("manager_id", manager.id)
+    .select("id");
+  if (error || !data.length) return { error: "Não foi possível salvar." };
+
+  refresh();
+  return { success: "Salvo." };
 }

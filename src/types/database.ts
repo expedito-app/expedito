@@ -14,6 +14,7 @@ type UserRole = "manager" | "field";
 type TaskUrgency = "low" | "medium" | "high";
 type TaskStatus = "pending" | "in_progress" | "done" | "problem";
 type OccurrenceType = "agency_closed" | "missing_document" | "other";
+type TransportMode = "transit" | "motorcycle" | "car";
 
 export type Database = {
   public: {
@@ -25,6 +26,7 @@ export type Database = {
           full_name: string;
           manager_id: string | null;
           created_at: string;
+          transport_mode: TransportMode;
         };
         Insert: {
           id: string;
@@ -32,6 +34,7 @@ export type Database = {
           full_name: string;
           manager_id?: string | null;
           created_at?: string;
+          transport_mode?: TransportMode;
         };
         Update: {
           id?: string;
@@ -39,6 +42,7 @@ export type Database = {
           full_name?: string;
           manager_id?: string | null;
           created_at?: string;
+          transport_mode?: TransportMode;
         };
         Relationships: [];
       };
@@ -53,6 +57,8 @@ export type Database = {
           requirements: string | null;
           notes: string | null;
           created_at: string;
+          latitude: number | null;
+          longitude: number | null;
         };
         Insert: {
           id?: string;
@@ -64,6 +70,8 @@ export type Database = {
           requirements?: string | null;
           notes?: string | null;
           created_at?: string;
+          latitude?: number | null;
+          longitude?: number | null;
         };
         Update: {
           id?: string;
@@ -75,6 +83,8 @@ export type Database = {
           requirements?: string | null;
           notes?: string | null;
           created_at?: string;
+          latitude?: number | null;
+          longitude?: number | null;
         };
         Relationships: [];
       };
@@ -217,12 +227,17 @@ export type Database = {
         Args: { p_task_id: string; p_signer_name: string; p_image: string };
         Returns: undefined;
       };
+      manager_clear_task_signature: {
+        Args: { p_task_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       user_role: UserRole;
       task_urgency: TaskUrgency;
       task_status: TaskStatus;
       occurrence_type: OccurrenceType;
+      transport_mode: TransportMode;
     };
     CompositeTypes: Record<string, never>;
   };

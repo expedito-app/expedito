@@ -9,7 +9,7 @@ import {
 } from "@/lib/password-change";
 
 const PUBLIC_PATHS = ["/login"];
-const MANAGER_PATHS = ["/painel", "/indicadores", "/tarefas", "/agencias", "/equipe"];
+const MANAGER_PATHS = ["/painel", "/indicadores", "/tarefas", "/rotas", "/agencias", "/equipe"];
 const FIELD_PATHS = ["/hoje"];
 const HOME = { manager: "/painel", field: "/hoje" } as const;
 

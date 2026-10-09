@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { FieldUserForm } from "@/components/features/field-user-form";
+import { TransportSelect } from "@/components/features/transport-select";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Equipe · Expedito" };
@@ -10,7 +11,7 @@ async function FieldUserList() {
   // O RLS já limita aos usuários de campo do gestor logado.
   const { data: members, error } = await supabase
     .from("profiles")
-    .select("id, full_name")
+    .select("id, full_name, transport_mode")
     .eq("role", "field")
     .order("full_name");
 
@@ -31,8 +32,13 @@ async function FieldUserList() {
   return (
     <ul className="divide-y divide-line border-y border-line">
       {members.map((member) => (
-        <li key={member.id} className="py-3">
-          {member.full_name}
+        <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+          <span>{member.full_name}</span>
+          <TransportSelect
+            memberId={member.id}
+            memberName={member.full_name}
+            value={member.transport_mode}
+          />
         </li>
       ))}
     </ul>

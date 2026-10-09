@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRANSPORT_MODES } from "@/lib/transport";
 
 const email = z
   .string()
@@ -29,4 +30,11 @@ export const changePasswordSchema = z
     path: ["confirmPassword"],
   });
 
-export const fieldUserSchema = z.object({ fullName, email, password });
+const transportMode = z.enum(TRANSPORT_MODES, { error: "Escolha o meio de transporte." });
+
+export const fieldUserSchema = z.object({ fullName, email, password, transportMode });
+
+export const transportUpdateSchema = z.object({
+  memberId: z.uuid(),
+  transportMode,
+});

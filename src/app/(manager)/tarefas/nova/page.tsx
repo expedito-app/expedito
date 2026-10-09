@@ -27,6 +27,7 @@ async function NewTask() {
       agencies={agencies}
       members={members}
       submitLabel="Salvar tarefa"
+      autoAssign
     />
   );
 }

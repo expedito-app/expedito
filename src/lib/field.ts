@@ -4,7 +4,9 @@ import {
   formatOpeningHours,
   saoPauloDayRange,
 } from "@/lib/format";
+import { getCurrentProfile } from "@/lib/auth";
 import { toRiskLevel, type RiskLevel } from "@/lib/risk";
+import { loadMyRoute } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums } from "@/types/database";
 
@@ -20,6 +22,8 @@ export type FieldTask = {
   urgency: Enums<"task_urgency">;
   status: Enums<"task_status">;
   riskLevel: RiskLevel;
+  /** Posição na rota sugerida de hoje (só tarefas de hoje e atrasadas). */
+  route: { order: number; eta: string; travelMin: number; km: number; late: boolean } | null;
 };
 
 export type FieldDay = {
@@ -35,7 +39,8 @@ export async function loadFieldDay(): Promise<FieldDay> {
   const supabase = await createClient();
   const { start, end } = saoPauloDayRange(new Date());
 
-  const [tasksResult, doneToday] = await Promise.all([
+  const profile = await getCurrentProfile();
+  const [tasksResult, doneToday, route] = await Promise.all([
     supabase
       .from("tasks_with_risk")
       .select("id, document_ref, description, agency_id, due_at, urgency, status, risk_level")
@@ -47,6 +52,10 @@ export async function loadFieldDay(): Promise<FieldDay> {
       .eq("status", "done")
       .gte("completed_at", start)
       .lt("completed_at", end),
+    // A rota é um extra: se falhar, a lista aparece na ordem de sempre.
+    loadMyRoute(profile?.transport_mode ?? "transit").catch(
+      (): Awaited<ReturnType<typeof loadMyRoute>> => ({}),
+    ),
   ]);
   if (tasksResult.error) throw tasksResult.error;
 
@@ -74,9 +83,15 @@ export async function loadFieldDay(): Promise<FieldDay> {
         urgency: t.urgency,
         status: t.status,
         riskLevel: toRiskLevel(t.risk_level),
+        route: route[t.id] ?? null,
       };
     })
-    .sort((a, b) => RISK_RANK[a.riskLevel] - RISK_RANK[b.riskLevel]);
+    // Rota de hoje primeiro (na ordem sugerida); depois as de outros dias, por risco.
+    .sort((a, b) => {
+      if (a.route && b.route) return a.route.order - b.route.order;
+      if (a.route || b.route) return a.route ? -1 : 1;
+      return RISK_RANK[a.riskLevel] - RISK_RANK[b.riskLevel];
+    });
 
   return { tasks, doneToday: doneToday.count ?? 0 };
 }

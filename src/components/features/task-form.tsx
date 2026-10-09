@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { suggestAssigneeFor, type SuggestionReply } from "@/actions/routing";
 import { Button, buttonBase, buttonVariants } from "@/components/ui/button";
 import { Field, SelectField, TextAreaField } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
@@ -37,7 +38,13 @@ type TaskFormProps = {
   agencies: Option[];
   members: Option[];
   submitLabel: string;
+  /** Na criação: pré-seleciona o responsável sugerido pela roteirização. */
+  autoAssign?: boolean;
 };
+
+type Suggestion = Extract<SuggestionReply, { ok: true }>;
+
+const DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
 export function TaskForm({
   action,
@@ -45,10 +52,34 @@ export function TaskForm({
   agencies,
   members,
   submitLabel,
+  autoAssign = false,
 }: TaskFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
   const v = { ...initial, ...state.values };
   const errors = state.fieldErrors;
+
+  // Responsável sugerido: recalculado quando agência ou prazo mudam. Só é
+  // aplicado sozinho enquanto o gestor não escolheu alguém à mão.
+  const [agencyId, setAgencyId] = useState(v.agencyId);
+  const [dueAt, setDueAt] = useState(v.dueAt);
+  const [assignedTo, setAssignedTo] = useState(v.assignedTo);
+  const [touched, setTouched] = useState(Boolean(v.assignedTo));
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
+
+  useEffect(() => {
+    if (!members.length || !agencyId || !DATETIME.test(dueAt)) return;
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      const reply = await suggestAssigneeFor({ agencyId, dueAt });
+      if (cancelled) return;
+      setSuggestion(reply.ok ? reply : null);
+      if (reply.ok && autoAssign && !touched) setAssignedTo(reply.memberId);
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [agencyId, dueAt, autoAssign, touched, members.length]);
 
   return (
     <form action={formAction} className="flex max-w-xl flex-col gap-6" noValidate>
@@ -65,7 +96,8 @@ export function TaskForm({
         label="Agência"
         name="agencyId"
         required
-        defaultValue={v.agencyId}
+        value={agencyId}
+        onChange={(e) => setAgencyId(e.target.value)}
         errors={errors?.agencyId}
       >
         <option value="" disabled>
@@ -83,7 +115,8 @@ export function TaskForm({
           name="dueAt"
           type="datetime-local"
           required
-          defaultValue={v.dueAt}
+          value={dueAt}
+          onChange={(e) => setDueAt(e.target.value)}
           errors={errors?.dueAt}
           hint="Horário de Brasília."
         />
@@ -104,7 +137,11 @@ export function TaskForm({
         <SelectField
           label="Responsável"
           name="assignedTo"
-          defaultValue={v.assignedTo}
+          value={assignedTo}
+          onChange={(e) => {
+            setAssignedTo(e.target.value);
+            setTouched(true);
+          }}
           errors={errors?.assignedTo}
         >
           <option value="">Sem responsável</option>
@@ -127,6 +164,32 @@ export function TaskForm({
           ))}
         </SelectField>
       </div>
+      {suggestion && (
+        <div
+          aria-live="polite"
+          className="-mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-line bg-surface px-3 py-2 text-sm"
+        >
+          <span className="text-label font-medium uppercase text-accent">Roteirização</span>
+          <span>
+            <strong className="font-medium">{suggestion.memberName}</strong>
+            <span className="text-muted"> · {suggestion.reason}</span>
+          </span>
+          {assignedTo === suggestion.memberId ? (
+            <span className="text-muted">(selecionado)</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setAssignedTo(suggestion.memberId);
+                setTouched(true);
+              }}
+              className="font-medium text-accent underline-offset-4 hover:underline"
+            >
+              Usar sugestão
+            </button>
+          )}
+        </div>
+      )}
       <TextAreaField
         label="Descrição"
         name="description"

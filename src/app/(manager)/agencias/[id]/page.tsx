@@ -37,6 +37,8 @@ async function EditAgency({ params }: { params: Promise<{ id: string }> }) {
             closesAt: formatTime(agency.closes_at),
             requirements: agency.requirements ?? "",
             notes: agency.notes ?? "",
+            latitude: agency.latitude === null ? "" : String(agency.latitude),
+            longitude: agency.longitude === null ? "" : String(agency.longitude),
           }}
           submitLabel="Salvar alterações"
         />

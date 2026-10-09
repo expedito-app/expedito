@@ -67,6 +67,17 @@ function TaskCard({
           </span>
         )}
       </div>
+      {task.route && (
+        <p className="mt-3 text-sm">
+          <span className="font-semibold tabular-nums text-accent">{task.route.order}ª parada</span>
+          <span className="text-muted">
+            {" "}· chegada prevista {task.route.eta}
+            {task.route.order > 1 &&
+              ` · ${task.route.km.toFixed(1).replace(".", ",")} km, ${task.route.travelMin} min`}
+          </span>
+          {task.route.late && <span className="text-risk-overdue"> · não cabe no prazo</span>}
+        </p>
+      )}
       <h2 className="mt-3 text-lg font-semibold">{task.documentRef}</h2>
       <p className="text-sm">
         <span className="text-muted">Prazo </span>

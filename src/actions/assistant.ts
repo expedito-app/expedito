@@ -17,6 +17,7 @@ import {
   fromDateTimeLocal,
   toDateTimeLocal,
 } from "@/lib/format";
+import { suggestForTask } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import {
   assistantHistorySchema,
@@ -196,13 +197,27 @@ export async function askAssistant(history: unknown): Promise<AssistantReply> {
 
   // Responsável fora da equipe é descartado (o gestor escolhe depois, se quiser).
   const member = members.find((m) => m.id === args.data.assigned_to);
+
+  // Sem responsável dito pelo gestor: usa a sugestão da roteirização (ele confirma no cartão).
+  let suggested: { id: string; label: string } | null = null;
+  if (!member && members.length) {
+    try {
+      const s = await suggestForTask({
+        agencyId: agency.id,
+        dueAtIso: fromDateTimeLocal(args.data.due_at),
+      });
+      if (s) suggested = { id: s.memberId, label: `${s.memberName} (sugerido: ${s.reason})` };
+    } catch (error) {
+      console.error("Sugestão de responsável:", error);
+    }
+  }
   const draft: TaskDraft = {
     agencyId: agency.id,
     documentRef: args.data.document_ref,
     description: args.data.description?.trim() ?? "",
     urgency: args.data.urgency,
     dueAt: args.data.due_at,
-    assignedTo: member?.id ?? "",
+    assignedTo: member?.id ?? suggested?.id ?? "",
     status: "pending",
   };
 
@@ -215,7 +230,7 @@ export async function askAssistant(history: unknown): Promise<AssistantReply> {
       agency: agency.name,
       due: formatDateTime(fromDateTimeLocal(draft.dueAt)),
       urgency: URGENCY_LABEL[args.data.urgency],
-      member: member?.full_name ?? "Sem responsável",
+      member: member?.full_name ?? suggested?.label ?? "Sem responsável",
       description: draft.description,
     },
   };
