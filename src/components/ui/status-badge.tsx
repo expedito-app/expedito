@@ -1,18 +1,19 @@
 import { STATUS_LABEL } from "@/lib/format";
 import type { Enums } from "@/types/database";
 
-// Status é neutro: as cores de estado ficam reservadas ao risco (seção 3.4).
-const dot: Record<Enums<"task_status">, string> = {
-  pending: "border border-muted",
-  in_progress: "bg-accent",
-  done: "bg-ink",
-  problem: "bg-ink ring-2 ring-ink/20",
+// Status é categoria: pastel suave + rótulo (o risco tem as próprias cores).
+const tone: Record<Enums<"task_status">, string> = {
+  pending: "bg-canvas border border-line",
+  in_progress: "bg-pastel-blue",
+  done: "bg-pastel-lilac",
+  problem: "bg-pastel-amber",
 };
 
 export function StatusBadge({ status }: { status: Enums<"task_status"> }) {
   return (
-    <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm">
-      <span aria-hidden className={`size-2 rounded-full ${dot[status]}`} />
+    <span
+      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium text-ink ${tone[status]}`}
+    >
       {STATUS_LABEL[status]}
     </span>
   );

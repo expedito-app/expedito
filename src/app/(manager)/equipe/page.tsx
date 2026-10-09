@@ -30,7 +30,7 @@ async function FieldUserList() {
     );
   }
   return (
-    <ul className="divide-y divide-line border-y border-line">
+    <ul className="divide-y divide-line">
       {members.map((member) => (
         <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
           <span>{member.full_name}</span>
@@ -49,10 +49,10 @@ export default function EquipePage() {
   return (
     <>
       <p className="text-label font-medium uppercase text-muted">Cadastro</p>
-      <h1 className="mt-2 font-serif text-display font-semibold">Equipe</h1>
-      <div className="mt-12 grid gap-16 md:grid-cols-2">
-        <section aria-labelledby="novo-usuario">
-          <h2 id="novo-usuario" className="font-serif text-title">
+      <h1 className="mt-2 text-display font-semibold">Equipe</h1>
+      <div className="mt-8 grid gap-4 lg:grid-cols-2">
+        <section aria-labelledby="novo-usuario" className="card">
+          <h2 id="novo-usuario" className="text-title font-medium">
             Novo usuário de campo
           </h2>
           <p className="mt-2 text-sm text-muted">
@@ -63,8 +63,8 @@ export default function EquipePage() {
             <FieldUserForm />
           </div>
         </section>
-        <section aria-labelledby="membros">
-          <h2 id="membros" className="font-serif text-title">
+        <section aria-labelledby="membros" className="card">
+          <h2 id="membros" className="text-title font-medium">
             Usuários de campo
           </h2>
           <div className="mt-8">

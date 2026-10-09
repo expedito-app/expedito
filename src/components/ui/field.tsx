@@ -6,7 +6,7 @@ import type {
 } from "react";
 
 const controlClass =
-  "rounded-md border border-line bg-surface px-3 text-base text-ink transition-colors duration-150 ease-soft placeholder:text-muted/70 focus:border-accent focus:outline-none aria-invalid:border-risk-overdue";
+  "rounded-2xl border border-line bg-canvas px-4 text-base text-ink transition-colors duration-150 ease-soft placeholder:text-muted/70 focus:border-ink focus:bg-surface focus:outline-none aria-invalid:border-risk-overdue";
 
 type BaseProps = {
   label: string;
@@ -63,7 +63,7 @@ export function Field({
           name={name}
           aria-invalid={errors?.length ? true : undefined}
           aria-describedby={describedBy}
-          className={`h-11 ${controlClass}`}
+          className={`h-12 ${controlClass}`}
           {...inputProps}
         />
       )}
@@ -87,7 +87,7 @@ export function TextAreaField({
           rows={3}
           aria-invalid={errors?.length ? true : undefined}
           aria-describedby={describedBy}
-          className={`py-2 ${controlClass}`}
+          className={`py-3 ${controlClass}`}
           {...props}
         />
       )}
@@ -111,7 +111,7 @@ export function SelectField({
           name={name}
           aria-invalid={errors?.length ? true : undefined}
           aria-describedby={describedBy}
-          className={`h-11 ${controlClass}`}
+          className={`h-12 ${controlClass}`}
           {...props}
         >
           {children}

@@ -18,7 +18,7 @@ export async function TaskSignature({ taskId }: { taskId: string }) {
     : { data: null };
 
   return (
-    <section aria-labelledby="assinatura" className="mt-16 max-w-xl border-t border-line pt-8">
+    <section aria-labelledby="assinatura" className="card mt-4 max-w-2xl">
       <h3 id="assinatura" className="text-label font-medium uppercase text-muted">
         Assinatura
       </h3>
@@ -42,7 +42,7 @@ export async function TaskSignature({ taskId }: { taskId: string }) {
           <img
             src={signature.image}
             alt={`Assinatura de ${signature.signer_name}`}
-            className="mt-4 h-36 w-full max-w-md rounded-md border border-line bg-white object-contain"
+            className="mt-4 h-36 w-full max-w-md rounded-2xl border border-line bg-white object-contain"
           />
         </>
       )}

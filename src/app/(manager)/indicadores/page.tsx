@@ -60,9 +60,9 @@ function Delta({ now, before, higherIsBetter, format }: {
 
 function Kpi({ label, value, children }: { label: string; value: string; children?: ReactNode }) {
   return (
-    <div className="border-t border-line pt-4">
-      <dt className="text-label font-medium uppercase text-muted">{label}</dt>
-      <dd className="mt-1 font-serif text-title font-semibold tabular-nums">{value}</dd>
+    <div className="card">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="mt-4 text-metric font-light tabular-nums">{value}</dd>
       {children}
     </div>
   );
@@ -71,7 +71,7 @@ function Kpi({ label, value, children }: { label: string; value: string; childre
 function Kpis({ totals, previous }: { totals: Totals; previous: Totals }) {
   const late = totals.lateDone + totals.lateOpen;
   return (
-    <dl className="grid grid-cols-2 gap-6 md:grid-cols-5">
+    <dl className="grid grid-cols-2 gap-4 lg:grid-cols-5">
       <Kpi label="Tarefas" value={String(totals.total)}>
         <Delta now={totals.total} before={previous.total} higherIsBetter format={(n) => String(n)} />
       </Kpi>
@@ -124,7 +124,7 @@ function PeriodFilter({ period }: { period: Period }) {
             type="date"
             name="de"
             defaultValue={period.fromDate}
-            className="h-10 rounded-md border border-line bg-surface px-2 text-sm normal-case text-ink"
+            className="h-10 rounded-full border border-line bg-surface px-2 text-sm normal-case text-ink"
           />
         </label>
         <label className="flex flex-col gap-1 text-label uppercase text-muted">
@@ -133,12 +133,12 @@ function PeriodFilter({ period }: { period: Period }) {
             type="date"
             name="ate"
             defaultValue={period.toDate}
-            className="h-10 rounded-md border border-line bg-surface px-2 text-sm normal-case text-ink"
+            className="h-10 rounded-full border border-line bg-surface px-2 text-sm normal-case text-ink"
           />
         </label>
         <button
           type="submit"
-          className="h-10 rounded-md border border-line px-4 text-sm text-ink transition-colors duration-150 hover:bg-surface"
+          className="h-10 rounded-full border border-line px-4 text-sm text-ink transition-colors duration-150 hover:bg-surface"
         >
           Aplicar
         </button>
@@ -149,8 +149,8 @@ function PeriodFilter({ period }: { period: Period }) {
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
-    <section className="mt-14">
-      <h2 className="font-serif text-title">{title}</h2>
+    <section className="card mt-4">
+      <h2 className="text-title font-medium">{title}</h2>
       {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
       <div className="mt-6">{children}</div>
     </section>
@@ -208,12 +208,12 @@ async function Insights({ searchParams }: { searchParams: SearchParams }) {
           {data.totals.total ? (
             <TrendChart buckets={data.series} />
           ) : (
-            <p className="border-y border-line py-12 text-center text-muted">Nenhuma tarefa no período.</p>
+            <p className="py-12 text-center text-muted">Nenhuma tarefa no período.</p>
           )}
         </div>
       </Section>
 
-      <div className="grid gap-x-16 md:grid-cols-2">
+      <div className="grid gap-x-4 lg:grid-cols-2">
         <Section title="Equipe" hint="Tarefas no período, atrasos e média por dia trabalhado.">
           {data.members.length ? (
             <ul className="flex flex-col gap-5">
@@ -265,7 +265,7 @@ async function Insights({ searchParams }: { searchParams: SearchParams }) {
         </Section>
       </div>
 
-      <div className="grid gap-x-16 md:grid-cols-2">
+      <div className="grid gap-x-4 lg:grid-cols-2">
         <Section title="Quando os prazos se concentram" hint="Dia da semana × hora do prazo. Ajuda a escalar a equipe.">
           <Heatmap {...data.heatmap} />
         </Section>
@@ -294,7 +294,7 @@ async function Insights({ searchParams }: { searchParams: SearchParams }) {
           {data.forecast.days.map((d) => (
             <li key={d.date} className="border-t border-line pt-3">
               <p className="text-label uppercase text-muted">{d.label}</p>
-              <p className={`mt-1 font-serif text-title tabular-nums ${d.aboveNormal ? "text-risk-at-risk" : ""}`}>
+              <p className={`mt-1 text-title tabular-nums ${d.aboveNormal ? "text-risk-at-risk" : ""}`}>
                 {d.count}
               </p>
               <div className="mt-2 h-1.5 rounded-full bg-line/60">
@@ -333,12 +333,12 @@ async function Insights({ searchParams }: { searchParams: SearchParams }) {
               inputMode="decimal"
               defaultValue={hasRate ? String(dailyRate) : ""}
               placeholder="Ex.: 450"
-              className="h-10 w-36 rounded-md border border-line bg-surface px-3 text-sm normal-case text-ink"
+              className="h-10 w-36 rounded-full border border-line bg-surface px-3 text-sm normal-case text-ink"
             />
           </label>
           <button
             type="submit"
-            className="h-10 rounded-md border border-line px-4 text-sm text-ink transition-colors duration-150 hover:bg-surface"
+            className="h-10 rounded-full border border-line px-4 text-sm text-ink transition-colors duration-150 hover:bg-surface"
           >
             Calcular
           </button>
@@ -348,7 +348,7 @@ async function Insights({ searchParams }: { searchParams: SearchParams }) {
           {hasRate && (
             <>
               {" "}≈{" "}
-              <strong className="font-serif text-title font-semibold text-ink">
+              <strong className="text-title font-semibold text-ink">
                 {brl.format(data.lateDays * dailyRate)}
               </strong>
             </>

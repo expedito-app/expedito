@@ -50,7 +50,7 @@ function TaskCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: 40 }}
       transition={{ duration: 0.2, ease: EASE }}
-      className={`rounded-lg border bg-surface p-4 ${
+      className={`rounded-3xl border bg-surface p-5 ${
         task.riskLevel === "overdue"
           ? "border-risk-overdue/40"
           : attention
@@ -180,7 +180,7 @@ export function FieldTaskList({ tasks }: { tasks: FieldTask[] }) {
   return (
     <MotionConfig reducedMotion="user">
       {error && (
-        <p role="alert" className="mb-4 rounded-md bg-risk-overdue-soft px-3 py-2 text-sm text-risk-overdue">
+        <p role="alert" className="mb-4 rounded-2xl bg-risk-overdue-soft px-3 py-2 text-sm text-risk-overdue">
           {error}
         </p>
       )}

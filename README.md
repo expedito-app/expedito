@@ -37,6 +37,7 @@ O Expedito é uma aplicação web com dois perfis.
   - rota do dia de cada pessoa, considerando prazo, horário da agência, distância entre as visitas e meio de transporte (ônibus/a pé, moto ou carro);
   - **revisão com IA**, que sugere trocas e agrupamentos;
   - ao criar uma tarefa, o sistema **sugere o responsável** que já vai passar perto (o gestor pode trocar).
+- **Empresa**: no primeiro acesso, o gestor cadastra a empresa e o endereço de onde a equipe sai, e as rotas partem dali.
 - Cadastros de agências (horário, endereço localizado automaticamente, exigências), tarefas e equipe. Lista de tarefas com busca por BL e selo de risco.
 
 **Campo (celular)**
@@ -55,13 +56,17 @@ A regra fica num lugar só, a view SQL `tasks_with_risk`. Telas, alertas e indic
 
 ## Contas de demonstração
 
-Cenário **simulado**, com agências fictícias de Santos e 12 meses de histórico gerado.
+Cenário **simulado**: pessoas e empresas fictícias e agências de armadores com endereços e horários simulados em Santos. Há duas empresas, para mostrar o isolamento entre gestores.
 
-| Perfil | E-mail |
-|---|---|
-| Gestora | `ana.ribeiro@expedito.test` |
-| Campo | `bruno.santos@expedito.test` |
-| Campo | `carla.mendes@expedito.test` |
+| Empresa | Perfil | E-mail |
+|---|---|---|
+| Rota Litoral Despachos Aduaneiros | Gestora | `mariana.albuquerque@rotalitoral.test` |
+| | Campo (moto) | `rafael.monteiro@rotalitoral.test` |
+| | Campo (ônibus) | `juliana.pacheco@rotalitoral.test` |
+| | Campo (carro) | `thiago.nascimento@rotalitoral.test` |
+| | Campo (moto) | `camila.duarte@rotalitoral.test` |
+| Atlântica Comissária de Despachos | Gestor | `eduardo.vasconcelos@atlanticacomissaria.test` |
+| | Campo | `lucas.ferreira@` e `patricia.gomes@atlanticacomissaria.test` |
 
 A senha é informada na apresentação.
 
@@ -108,7 +113,10 @@ npm run manager:create -- --email voce@empresa.com --name "Seu Nome"
 |---|---|
 | `npm run typecheck` / `npm run lint` / `npm run build` | Checagens antes de cada commit |
 | `npm run test:isolation` | Teste de RLS direto pela API (precisa de `.env.test.local`) |
-| `npm run seed:demo` | Recria o cenário da apresentação, com 12 meses de histórico |
+| `npm run reset:all -- --confirmo-apagar-tudo` | Apaga todas as contas e dados |
+| `npm run seed:demo` | Cenário completo (duas empresas, hoje, amanhã e 12 meses de histórico) |
+| `npm run seed:apresentacao` | Mesmo cenário, com prazos ancorados às 19:40 (rodar de manhã) |
+| `npm run demo:ocorrencia` | Registra uma ocorrência ao vivo (pop-up no painel) |
 | `npm run scenario:risk` | Cria uma tarefa para cada situação de risco e confere a view |
 
 Num clone novo, rode `npx next typegen` antes do `typecheck`.

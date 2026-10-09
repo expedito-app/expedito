@@ -48,11 +48,11 @@ function SearchForm({ q, status }: { q: string | undefined; status: string | und
         type="search"
         defaultValue={q}
         placeholder="Buscar BL ou documento"
-        className="h-10 w-56 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-muted/70 focus:border-accent focus:outline-none"
+        className="h-10 w-56 rounded-full border border-line bg-surface px-3 text-sm text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none"
       />
       <button
         type="submit"
-        className="h-10 rounded-md border border-line px-4 text-sm text-ink transition-colors duration-150 hover:bg-surface"
+        className="h-10 rounded-full border border-line px-4 text-sm text-ink transition-colors duration-150 hover:bg-surface"
       >
         Buscar
       </button>
@@ -127,11 +127,11 @@ async function TaskList({ searchParams }: { searchParams: SearchParams }) {
           </p>
         ) : !tasks.length ? (
           q ? (
-            <p className="border-y border-line py-12 text-center text-muted">
+            <p className="card py-12 text-center text-muted">
               Nenhuma tarefa com “{q}”.
             </p>
           ) : status ? (
-            <p className="border-y border-line py-12 text-center text-muted">
+            <p className="card py-12 text-center text-muted">
               Nenhuma tarefa com status “{STATUS_LABEL[status]}”.
             </p>
           ) : (
@@ -142,6 +142,7 @@ async function TaskList({ searchParams }: { searchParams: SearchParams }) {
             />
           )
         ) : (
+          <div className="card overflow-x-auto px-6 py-2">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-line text-label uppercase text-muted">
@@ -191,6 +192,7 @@ async function TaskList({ searchParams }: { searchParams: SearchParams }) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
         {!error && tasks.length > 0 && (
           <p className="mt-6 text-sm text-muted">

@@ -41,7 +41,7 @@ export function AgencyForm({ action, initial, submitLabel }: AgencyFormProps) {
   const errors = state.fieldErrors;
 
   return (
-    <form action={formAction} className="flex max-w-xl flex-col gap-6" noValidate>
+    <form action={formAction} className="card flex max-w-2xl flex-col gap-6" noValidate>
       <FormMessage state={state} />
       <Field
         label="Nome"

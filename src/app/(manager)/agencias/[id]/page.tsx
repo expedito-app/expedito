@@ -26,7 +26,7 @@ async function EditAgency({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      <h2 className="font-serif text-title">{agency.name}</h2>
+      <h2 className="text-title font-medium">{agency.name}</h2>
       <div className="mt-8">
         <AgencyForm
           action={updateAgency.bind(null, agency.id)}
@@ -45,7 +45,7 @@ async function EditAgency({ params }: { params: Promise<{ id: string }> }) {
       </div>
       <section
         aria-labelledby="excluir-agencia"
-        className="mt-16 max-w-xl border-t border-line pt-8"
+        className="card mt-4 max-w-2xl"
       >
         <h3
           id="excluir-agencia"

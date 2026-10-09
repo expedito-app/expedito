@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Criar senha · Expedito" };
 export default function ChangePasswordPage() {
   return (
     <>
-      <h1 className="font-serif text-display font-semibold">Crie sua senha</h1>
+      <h1 className="text-display font-light">Crie sua senha</h1>
       <p className="mt-3 text-muted">
         Você entrou com uma senha temporária. Escolha uma senha pessoal para
         continuar.

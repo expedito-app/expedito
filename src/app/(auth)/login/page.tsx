@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Entrar · Expedito" };
 export default function LoginPage() {
   return (
     <>
-      <h1 className="font-serif text-display font-semibold">Entrar</h1>
+      <h1 className="text-display font-light">Entrar</h1>
       <p className="mt-3 text-muted">
         Acompanhe quem está com o quê e o que está em risco.
       </p>

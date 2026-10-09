@@ -132,16 +132,17 @@ expedito/
 | | `missing_document` | Faltou documento |
 | | `other` | Outro |
 
-### 3.4 Diretrizes visuais
+### 3.4 Diretrizes visuais (redesenho de 08/10/2026, pedido do usuário)
 
-- **Minimalista e editorial:** muito espaço em branco, poucos elementos por tela, hierarquia clara, sem decoração gratuita.
-- **Tipografia estruturada:** par de fontes via `next/font` (sugestão: uma serifada editorial para títulos, como Fraunces ou Newsreader, e uma sans neutra para interface, como Inter). Escala tipográfica definida em tokens do Tailwind; títulos grandes com contraste de peso, rótulos pequenos em caixa alta com espaçamento entre letras.
-- **Cores:** base neutra (off-white e grafite). Uma única cor de destaque. Cores de estado usadas **apenas** para risco: atrasada (vermelho contido), em risco (âmbar), no prazo (neutro ou verde discreto). Nunca depender só da cor: acompanhar de texto ou ícone.
-- **Componentes:** linhas e bordas finas em vez de sombras pesadas; cartões planos; tabelas limpas no desktop.
-- **Animação fluida e discreta** (Motion): transições de entrada em 150 a 250 ms, easing suave, mudança de status com transição de layout, sem animações que atrasem o uso. Respeitar `prefers-reduced-motion`.
-- **Mobile-first na tela de campo:** alvos de toque grandes (mínimo 44 px), ações principais (iniciar, concluir, ocorrência) alcançáveis com o polegar, atualização de status em no máximo 2 toques.
-- **Painel do gestor:** otimizado para desktop, com lista do dia agrupada por status e destaque imediato para atrasadas e em risco.
-- **Acessibilidade:** contraste adequado, foco visível, rótulos em formulários, navegação por teclado.
+- **Estilo:** minimalista monocromático. **Preto** é a cor de ênfase (sidebar, botão principal, destaque); **pastéis** (azul, verde, âmbar, rosa, lilás: tokens `pastel-*`) só para **categorizar** (risco, status, tipos de análise). Nunca depender só da cor: sempre rótulo ou ícone.
+- **Cores:** fundo cinza-azulado claro (`paper`), container principal `canvas`, **cards brancos** (`surface`). Risco: texto escuro sobre pastel (atrasada = rosa, em risco = âmbar, no prazo = verde).
+- **Tipografia:** uma única sans-serif (Inter). Hierarquia por tamanho e peso; **números grandes e leves** (`text-metric font-light`).
+- **Formas:** cantos muito arredondados (cards `rounded-[2rem]` via utilitário `card`, botões e campos pequenos `rounded-full`, campos `rounded-2xl`); bordas de 1px quase invisíveis (`line`); quase sem sombra (só pop-ups).
+- **Espaçamento:** padding generoso (`card` = 1.75rem), grid regular, gaps uniformes (`gap-4`).
+- **Layout do gestor:** sidebar escura **flutuante só com ícones** (rótulo no hover/foco e em `aria-label`; no celular vira barra inferior), container principal arredondado sobre o fundo, seções em **grid de cards**. Campo: barra escura arredondada no topo, cards de tarefa brancos.
+- **Animação fluida e discreta** (Motion): 150 a 250 ms, easing suave, respeitar `prefers-reduced-motion`.
+- **Mobile-first na tela de campo:** alvos de toque ≥ 44 px, ações alcançáveis com o polegar, status em no máximo 2 toques.
+- **Acessibilidade:** contraste adequado, foco visível (contorno preto), rótulos em formulários, navegação por teclado.
 
 ---
 
@@ -381,7 +382,7 @@ order by total desc;
 | Repositório no GitHub | Sim: github.com/expedito-app/expedito |
 | Projeto Next.js inicializado | Sim (Next 16.4, `cacheComponents` ligado, `proxy.ts`) |
 | Projeto Supabase criado e variáveis configuradas | Sim (local em `.env.local`) |
-| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` aplicada em 07/10; `20261009000000_roteirizacao.sql` (PR `claude/roteirizacao`) **aplicar antes de publicar esse PR** |
+| Migrations aplicadas | `..._init.sql` sim; `..._tasks_same_owner.sql` proposta, **não aplicada** por decisão do usuário; `20261008000000_task_signatures.sql` aplicada em 07/10; `20261009000000_roteirizacao.sql` aplicada em 08/10; `20261009010000_empresa_do_gestor.sql` (PR `claude/empresa-e-apresentacao`) **aplicar antes de publicar esse PR** |
 | Login com perfis (Fase 0) | Sim, testado local e em produção |
 | Sem cadastro público + senha temporária (Fase 6, item 1) | Sim (na `main`); cadastro público desligado no Supabase (conferido pelo `test:isolation` em 08/10) |
 | Deploy na Vercel | Sim: https://expedito-two.vercel.app |
@@ -392,6 +393,7 @@ order by total desc;
 | Assinatura na conclusão (escopo ampliado) | Sim (na `main` desde 08/10): migration aplicada, `test:isolation` 100% PASS e testado de ponta a ponta no local |
 | Melhorias de gestão (08/10, PR `claude/melhorias-gestao`) | `/indicadores` (KPIs, série, equipe, agências, mapa de calor, próximos 7 dias, custo de atraso, análise com Gemini), exportar CSV, `/tarefas/importar` (CSV), pop-ups de alerta (gestor e campo), risco e busca por BL em `/tarefas`, Gemini padrão 3.5, papel no token, CI, README em pt-BR, seed com 12 meses de histórico. **Sem migration** |
 | Roteirização (08/10, PR `claude/roteirizacao`, depende do PR de gestão) | Transporte na Equipe, coordenadas na Agência, `/rotas` (rota do dia por pessoa + revisão com IA), ordem sugerida no `/hoje`, sugestão de responsável no formulário e no assistente, assinatura apagada quando o gestor reabre. **Com migration** |
+| Empresa do gestor + reset + seed da apresentação + redesenho (08/10, PR `claude/empresa-e-apresentacao`) | Gestor novo cadastra empresa e endereço-base no primeiro acesso (`/cadastro-empresa`), edita em `/empresa`; rotas saem da base. `reset:all`, `seed:demo` reescrito (duas empresas, nomes realistas), `seed:apresentacao`, `demo:ocorrencia`. Visual monocromático com sidebar de ícones. **Com migration** |
 | Cenário simulado de dados (Fase 4) | Sim: `npm run seed:demo`, executado em 07/10 às 19:33 (13/13 PASS); contas da demo criadas em produção |
 
 ### 5.1 Como rodar e testar (em qualquer máquina)
@@ -405,7 +407,10 @@ order by total desc;
 |---|---|
 | `npm run test:isolation` | Teste de RLS direto pela API: confere que o cadastro público está desligado, dois gestores e um campo; apaga os dados que cria (mantém as contas). Rodar após qualquer mudança em migration, RLS ou Server Action |
 | `npm run scenario:risk` | Recria, para `TEST_MANAGER_UI`, 8 tarefas `TESTE-*` (uma por situação de risco, prazos relativos ao horário atual) e confere a view. `-- --clean` só remove |
-| `npm run seed:demo` | Cenário da apresentação: cria (uma vez) Ana Ribeiro (gestora), Bruno Santos e Carla Mendes (campo), `@expedito.test`, senha `DEMO_PASSWORD`; apaga e recria só os dados da Ana (5 agências fictícias de Santos, 13 tarefas do dia, 2 ocorrências e ~1.200 tarefas concluídas de histórico dos últimos 12 meses, com semente fixa) e confere a view. Prazos de hoje limitados a 23:50 (SP). Funciona se rodado entre 07h e 21h; para a apresentação (19:30–21:30), rodar por volta de 19:15 |
+| `npm run reset:all -- --confirmo-apagar-tudo` | **Apaga todas as contas e todos os dados** (sem a flag, só lista). Depois, rode o seed |
+| `npm run seed:demo` | Cenário completo, com prazos relativos ao horário em que roda. Duas empresas (isolamento): **Rota Litoral Despachos Aduaneiros** (Mariana Albuquerque; campo Rafael/moto, Juliana/ônibus, Thiago/carro, Camila/moto; `@rotalitoral.test`) e **Atlântica Comissária de Despachos** (Eduardo Vasconcelos; Lucas, Patrícia; `@atlanticacomissaria.test`), senha `DEMO_PASSWORD`. 9 agências de armadores reais com endereços/horários **simulados**, tarefas de hoje (atrasadas, vencendo, em risco, com ocorrência, concluídas com assinatura), 14 de amanhã (3 sem responsável), 12 meses de histórico (~2.000) com padrões para a IA. Recria só os dados de domínio; contas são reaproveitadas |
+| `npm run seed:apresentacao` | Igual, mas com os prazos **ancorados às 19:40 de hoje** (`--para HH:MM` para outro horário). Rode de manhã (antes das 12h): às 19:40 há atrasadas, uma vence em 10 min e outra em 25 min (atrasam ao vivo), outras entram em risco durante a demo e a ZIM fecha 50 min depois da âncora. O script imprime a linha do tempo |
+| `npm run demo:ocorrencia` | Durante a demo: registra uma ocorrência como Rafael (campo) para o pop-up aparecer no painel da gestora em até 1 min |
 | `npm run manager:create -- --email <e-mail> --name "<nome>"` | Cria um gestor com senha temporária (mostrada uma vez no terminal); a troca é obrigatória no primeiro acesso |
 
 Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck`: `PageProps`/`LayoutProps` são gerados pelo Next.
@@ -433,6 +438,8 @@ Num clone novo, rode `npx next typegen` (ou `npm run build`) antes do `typecheck
 - **Geocodificação (`lib/geocode.ts`):** Nominatim, só no servidor, ao salvar agência sem coordenadas (ou com endereço novo e coordenadas antigas). Timeout de 4 s; se falhar, salva sem coordenadas.
 - **Transporte:** coluna `profiles.transport_mode`; o gestor altera pela Equipe com o cliente admin preso a `manager_id` do gestor logado (profiles não tem política de UPDATE).
 - **Reabrir pelo gestor:** `updateTask` chama `manager_clear_task_signature` quando o status sai de "Concluída"; a função só apaga assinatura de tarefa do próprio gestor que não está concluída.
+- **Empresa do gestor:** colunas `company_name`, `base_address`, `base_latitude/longitude` em `profiles` (migration `20261009010000`). Gestor criado por `manager:create` ganha a marca `needs_company` em `app_metadata`; o `proxy.ts` prende em `/cadastro-empresa` (depois de `/trocar-senha`) até salvar, e `saveCompany` limpa a marca e renova o token. Endereço localizado pelo Nominatim (obrigatório achar ou digitar coordenadas). O campo lê a base do gestor por `current_base()` (security definer). Rotas e sugestão de responsável partem da base.
+- **Nomes da demo:** pessoas e empresas fictícias com nomes realistas; agências usam nomes de armadores reais com dados simulados (declarar como simulado na apresentação).
 - **`/tarefas`:** sem filtro mostra abertas + concluídas da última semana (o histórico antigo fica no filtro "Concluída", na busca e em Indicadores); limite de 200 linhas.
 
 ### 5.3 Pendências para a Fase 4 (perguntar ao usuário antes de começar)

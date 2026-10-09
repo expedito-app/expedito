@@ -99,19 +99,23 @@ export function DashboardList({ tasks }: { tasks: DashboardTask[] }) {
     // reducedMotion="user": sem animação para quem pede menos movimento.
     <MotionConfig reducedMotion="user">
       <LayoutGroup>
-        <div className="flex flex-col gap-12">
+        <div className="flex flex-col gap-4">
           {groups.map((group) => (
-            <section key={group.key} aria-labelledby={`grupo-${group.key}`}>
+            <section key={group.key} aria-labelledby={`grupo-${group.key}`} className="card">
               <h2
                 id={`grupo-${group.key}`}
-                className={`flex items-baseline gap-2 border-b pb-2 text-label font-medium uppercase ${
-                  group.attention
-                    ? "border-risk-overdue/30 text-risk-overdue"
-                    : "border-line text-muted"
+                className={`flex items-center gap-2 pb-2 text-sm font-medium ${
+                  group.attention ? "text-risk-overdue" : "text-ink"
                 }`}
               >
                 {group.title}
-                <span className="tabular-nums">({group.tasks.length})</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${
+                    group.attention ? "bg-pastel-rose" : "bg-canvas text-muted"
+                  }`}
+                >
+                  {group.tasks.length}
+                </span>
               </h2>
               <ul className="divide-y divide-line">
                 <AnimatePresence initial={false} mode="popLayout">

@@ -51,10 +51,10 @@ function writeStored(value: Stored) {
   }
 }
 
-const TONE: Record<Alert["tone"], { border: string; icon: string; text: string }> = {
-  overdue: { border: "border-l-risk-overdue", icon: RISK_STYLE.overdue.icon, text: RISK_STYLE.overdue.text },
-  at_risk: { border: "border-l-risk-at-risk", icon: RISK_STYLE.at_risk.icon, text: RISK_STYLE.at_risk.text },
-  info: { border: "border-l-accent", icon: "i", text: "text-accent" },
+const TONE: Record<Alert["tone"], { chip: string; icon: string; text: string }> = {
+  overdue: { chip: "bg-pastel-rose", icon: RISK_STYLE.overdue.icon, text: RISK_STYLE.overdue.text },
+  at_risk: { chip: "bg-pastel-amber", icon: RISK_STYLE.at_risk.icon, text: RISK_STYLE.at_risk.text },
+  info: { chip: "bg-pastel-blue", icon: "i", text: "text-ink" },
 };
 
 // No campo os avisos ficam no topo: embaixo estão os botões do polegar.
@@ -112,7 +112,7 @@ export function AlertCenter({ placement = "bottom" }: { placement?: "bottom" | "
       aria-live="polite"
       aria-label="Alertas"
       className={`pointer-events-none fixed inset-x-4 z-40 flex flex-col items-end gap-2 sm:left-auto sm:w-96 ${
-        placement === "top" ? "top-16" : "bottom-4"
+        placement === "top" ? "top-20" : "bottom-24 md:bottom-6"
       }`}
     >
       <AnimatePresence initial={false}>
@@ -127,10 +127,13 @@ export function AlertCenter({ placement = "bottom" }: { placement?: "bottom" | "
               exit={{ opacity: 0, x: 24 }}
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
               role="status"
-              className={`pointer-events-auto w-full rounded-md border border-l-4 border-line bg-surface p-4 ${tone.border}`}
+              className="pointer-events-auto w-full rounded-3xl border border-line bg-surface p-4 shadow-[0_8px_30px_rgba(14,16,19,0.06)]"
             >
               <div className="flex items-start gap-3">
-                <span aria-hidden className={`mt-0.5 font-semibold ${tone.text}`}>
+                <span
+                  aria-hidden
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${tone.chip} ${tone.text}`}
+                >
                   {tone.icon}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -147,7 +150,7 @@ export function AlertCenter({ placement = "bottom" }: { placement?: "bottom" | "
                   type="button"
                   onClick={() => dismiss([alert.id])}
                   aria-label={`Dispensar: ${alert.title}`}
-                  className="-m-2 flex size-10 items-center justify-center rounded-md text-muted hover:text-ink"
+                  className="-m-1 flex size-10 items-center justify-center rounded-full text-muted hover:bg-canvas hover:text-ink"
                 >
                   ×
                 </button>
@@ -157,14 +160,14 @@ export function AlertCenter({ placement = "bottom" }: { placement?: "bottom" | "
         })}
       </AnimatePresence>
       {hidden > 0 && (
-        <div className="pointer-events-auto flex items-center gap-3 rounded-md border border-line bg-surface px-4 py-2 text-sm">
+        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-line bg-surface px-4 py-2 text-sm">
           <span className="text-muted">
             + {hidden} {hidden === 1 ? "alerta" : "alertas"}
           </span>
           <button
             type="button"
             onClick={() => dismiss(alerts.map((a) => a.id))}
-            className="font-medium text-accent underline-offset-4 hover:underline"
+            className="font-medium text-ink underline underline-offset-4"
           >
             Dispensar todos
           </button>

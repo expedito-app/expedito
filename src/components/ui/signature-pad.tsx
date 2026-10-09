@@ -85,7 +85,7 @@ export function SignaturePad({ onChange, labelledBy }: SignaturePadProps) {
 
   return (
     <div>
-      <div className="relative rounded-md border border-line bg-white">
+      <div className="relative rounded-2xl border border-line bg-white">
         <canvas
           ref={canvasRef}
           role="img"

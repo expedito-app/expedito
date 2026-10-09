@@ -6,9 +6,9 @@ import { generateInsights, type Insight } from "@/actions/insights";
 import { Button } from "@/components/ui/button";
 
 const KIND_LABEL: Record<Insight["kind"], { label: string; icon: string; tone: string }> = {
-  alert: { label: "Alerta", icon: "!", tone: "text-risk-overdue" },
-  trend: { label: "Tendência", icon: "↗", tone: "text-accent" },
-  action: { label: "Plano de ação", icon: "→", tone: "text-risk-ok" },
+  alert: { label: "Alerta", icon: "!", tone: "bg-pastel-rose" },
+  trend: { label: "Tendência", icon: "↗", tone: "bg-pastel-blue" },
+  action: { label: "Plano de ação", icon: "→", tone: "bg-pastel-green" },
 };
 
 type Params = { periodo?: string; de?: string; ate?: string };
@@ -55,8 +55,8 @@ export function AiInsights({ params }: { params: Params }) {
             {insights.map((insight) => {
               const kind = KIND_LABEL[insight.kind];
               return (
-                <li key={insight.title} className="rounded-md border border-line bg-surface p-5">
-                  <p className={`text-label font-medium uppercase ${kind.tone}`}>
+                <li key={insight.title} className={`rounded-3xl p-6 ${kind.tone}`}>
+                  <p className="text-label font-medium uppercase text-ink/70">
                     <span aria-hidden className="mr-1.5 font-semibold">
                       {kind.icon}
                     </span>
