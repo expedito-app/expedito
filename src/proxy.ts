@@ -11,6 +11,8 @@ import {
 } from "@/lib/password-change";
 
 const PUBLIC_PATHS = ["/login"];
+// Landing page de divulgação: aberta só para quem não está logado.
+const LANDING_PATH = "/";
 const MANAGER_PATHS = ["/painel", "/indicadores", "/tarefas", "/rotas", "/agencias", "/equipe", "/empresa"];
 const FIELD_PATHS = ["/hoje"];
 const HOME = { manager: "/painel", field: "/hoje" } as const;
@@ -60,7 +62,9 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!userId) {
-    return matches(pathname, PUBLIC_PATHS) ? response : redirectTo("/login");
+    return pathname === LANDING_PATH || matches(pathname, PUBLIC_PATHS)
+      ? response
+      : redirectTo("/login");
   }
 
   // Papel gravado no token (app_metadata, que só o service role altera) evita
@@ -94,7 +98,7 @@ export async function proxy(request: NextRequest) {
 
   const home = HOME[profile.role];
   if (
-    pathname === "/" ||
+    pathname === LANDING_PATH ||
     onChangePassword ||
     onCompanySetup ||
     matches(pathname, PUBLIC_PATHS)
